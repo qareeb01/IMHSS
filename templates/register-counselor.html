@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+    <title>Register Counselor - IMHSS</title>
+    <link
+        rel="stylesheet"
+        href="/static/css/registration-form.css"
+    >
+</head>
+
+<body>
+    <!-- HEADER -->
+    <header class="form-header">
+        <div class="header-content">
+            <div class="header-left">
+                <h1>IMHSS</h1>
+                <p class="page-subtitle">Counselor Registration</p>
+            </div>
+            <div class="header-right">
+                <span class="user-name">Administrator</span>
+
+                <a
+                    href="{{url_for('IMHSS.admin_dashboard')}}"
+                    class="btn-back"
+                >← Back to Dashboard</a>
+            </div>
+        </div>
+    </header>
+
+    <!-- FLASH MESSAGES -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }}">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <!-- MAIN CONTAINER -->
+    <div class="form-container">
+        <div class="form-wrapper">
+
+            <!-- REGISTRATION FORM -->
+            <div class="card">
+                <div class="card-header">
+                    <h2>Register New Counselor</h2>
+                    <p>Create a new counselor account with administrative
+                        privileges.</p>
+                </div>
+                <form
+                    method="POST"
+                    action="{{ url_for('IMHSS.admin_create_counselor') }}"
+                    class="registration-form"
+                >
+
+                    <!-- PERSONAL INFORMATION -->
+                    <div class="form-section">
+                        <h3 class="section-title">Personal Information</h3>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="counselor_name">
+                                    Full Name <span class="required">*</span>
+                                </label>
+                                <input
+                                    type="text"
+                                    id="counselor_name"
+                                    name="name"
+                                    placeholder="e.g., Dr. Jane Smith"
+                                    required
+                                >
+                                <small class="help-text">Include professional
+                                    title (Dr., Prof., etc.)</small>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="counselor_email">
+                                    Email Address <span
+                                        class="required">*</span>
+                                </label>
+                                <input
+                                    type="email"
+                                    id="counselor_email"
+                                    name="email"
+                                    placeholder="e.g., jane.smith@university.edu"
+                                    required
+                                >
+                                <small class="help-text">Must be a unique
+                                    institutional email</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- PROFESSIONAL INFORMATION -->
+                    <div class="form-section">
+                        <h3 class="section-title">Professional Information</h3>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="counselor_dept">
+                                    Department <span class="required">*</span>
+                                </label>
+                                <input
+                                    type="text"
+                                    id="counselor_dept"
+                                    name="department"
+                                    placeholder="e.g., Psychology, Counseling, Social Work"
+                                    required
+                                >
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ACCOUNT CREDENTIALS -->
+                    <div class="form-section">
+                        <h3 class="section-title">Account Credentials</h3>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="counselor_password">
+                                    Temporary Password <span
+                                        class="required">*</span>
+                                </label>
+                                <input
+                                    type="password"
+                                    id="counselor_password"
+                                    name="password"
+                                    placeholder="Enter a secure temporary password"
+                                    minlength="8"
+                                    required
+                                >
+                                <small class="help-text">Minimum 8 characters.
+                                    Counselor should change on first
+                                    login.</small>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="counselor_password_confirm">
+                                    Confirm Password <span
+                                        class="required">*</span>
+                                </label>
+                                <input
+                                    type="password"
+                                    id="counselor_password_confirm"
+                                    name="password_confirm"
+                                    placeholder="Re-enter the password"
+                                    minlength="8"
+                                    required
+                                >
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- INFORMATION BOX -->
+                    <div class="info-box">
+                        <div class="info-icon">ℹ️</div>
+                        <div class="info-content">
+                            <h4>Counselor Account Details</h4>
+                            <ul>
+                                <li>Maximum of 5 students can be assigned per
+                                    counselor</li>
+                                <li>Counselors can only view students assigned
+                                    to them</li>
+                                <li>Account status can be managed from User
+                                    Management</li>
+                                <li>Counselor will receive login credentials via
+                                    email</li>
+                                <li>Password must be changed on first login
+                                    (recommended)</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <!-- FORM ACTIONS -->
+                    <div class="form-actions">
+                        <button
+                            type="submit"
+                            class="btn-primary"
+                        >
+                            <span class="btn-icon">✓</span>
+                            Register Counselor
+                        </button>
+                        <a
+                            href="{{url_for('IMHSS.admin_dashboard')}}"
+                            class="btn-secondary"
+                        >Cancel</a>
+                    </div>
+                </form>
+            </div>
+
+        </div>
+    </div>
+
+    <script src="/static/js/registration-form.js"></script>
+</body>
+
+</html>

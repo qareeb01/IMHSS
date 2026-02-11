@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+    <title>All Messages - Admin</title>
+    <link
+        rel="stylesheet"
+        href="/static/css/Dashboard.css"
+    >
+</head>
+
+<body>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    {% for category, message in messages %}
+    <div class="alert alert-{{ category }}">{{ message }}</div>
+    {% endfor %}
+    {% endif %}
+    {% endwith %}
+
+    <div class="messages-page">
+        <div class="messages-header">
+            <a
+                href="{{ url_for('IMHSS.admin_dashboard') }}"
+                class="back-btn"
+            >
+                <svg
+                    width="20"
+                    height="20"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                >
+                    <line
+                        x1="19"
+                        y1="12"
+                        x2="5"
+                        y2="12"
+                    ></line>
+                    <polyline points="12 19 5 12 12 5"></polyline>
+                </svg>
+                Back to Dashboard
+            </a>
+            <div>
+                <h1>All Messages</h1>
+                <p>Showing last 100 messages</p>
+            </div>
+        </div>
+
+        <div class="messages-container">
+            {% if messages %}
+            <div class="messages-timeline">
+                {% for msg in messages %}
+                <div
+                    class="message-block {% if msg.flagged %}flagged{% endif %}">
+                    <div class="message-meta">
+                        <div class="student-info-inline">
+                            <div class="student-avatar-tiny">
+                                {{ msg.student.name[0].upper() if msg.student
+                                else '?' }}
+                            </div>
+                            <div>
+                                <strong>{{ msg.student.name if msg.student else
+                                    'Unknown Student' }}</strong>
+                                <span class="message-timestamp-inline">
+                                    {{ msg.timestamp.strftime('%b %d, %Y %I:%M
+                                    %p') if msg.timestamp else 'Unknown' }}
+                                </span>
+                            </div>
+                        </div>
+                        {% if msg.flagged %}
+                        <span class="risk-badge high">High Risk</span>
+                        {% elif msg.risk_level == 'medium' %}
+                        <span class="risk-badge medium">Medium Risk</span>
+                        {% elif msg.risk_level == 'low' %}
+                        <span class="risk-badge low">Low Risk</span>
+                        {% endif %}
+                    </div>
+
+                    <div class="message-student">
+                        <div class="message-label">Student:</div>
+                        <div class="message-bubble student-bubble">
+                            {{ msg.content }}
+                        </div>
+                    </div>
+
+                    <div class="message-ai">
+                        <div class="message-label">AI Response:</div>
+                        <div class="message-bubble ai-bubble">
+                            {{ msg.ai_response }}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="empty-state-large">
+                <svg
+                    width="64"
+                    height="64"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                >
+                    <path
+                        d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"
+                    ></path>
+                </svg>
+                <h3>No Messages</h3>
+                <p>No chat messages in the system yet.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</body>
+
+</html>

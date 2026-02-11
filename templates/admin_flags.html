@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+    <title>Flagged Messages - Admin</title>
+    <link
+        rel="stylesheet"
+        href="/static/css/Dashboard.css"
+    >
+</head>
+
+<body>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    {% for category, message in messages %}
+    <div class="alert alert-{{ category }}">{{ message }}</div>
+    {% endfor %}
+    {% endif %}
+    {% endwith %}
+
+    <div class="messages-page">
+        <div class="messages-header">
+            <a
+                href="{{ url_for('IMHSS.admin_dashboard') }}"
+                class="back-btn"
+            >
+                <svg
+                    width="20"
+                    height="20"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                >
+                    <line
+                        x1="19"
+                        y1="12"
+                        x2="5"
+                        y2="12"
+                    ></line>
+                    <polyline points="12 19 5 12 12 5"></polyline>
+                </svg>
+                Back to Dashboard
+            </a>
+            <div>
+                <h1>All Flagged Messages</h1>
+                <p>High-risk messages across the system</p>
+            </div>
+        </div>
+
+        <div class="messages-container">
+            {% if flags %}
+            <div class="flagged-messages-list">
+                {% for flag in flags %}
+                <div
+                    class="flag-card {% if not flag.reviewed %}urgent{% endif %}">
+                    <div class="flag-header">
+                        <div class="flag-student">
+                            <div class="student-avatar-small">
+                                {{ flag.student.name[0].upper() if flag.student
+                                else '?' }}
+                            </div>
+                            <div>
+                                <h4>{{ flag.student.name if flag.student else
+                                    'Unknown Student' }}</h4>
+                                <p class="flag-time">{{
+                                    flag.flagged_at.strftime('%B %d, %Y at %I:%M
+                                    %p') if flag.flagged_at else 'Unknown time'
+                                    }}</p>
+                                <p class="flag-counselor">Counselor: {{
+                                    flag.counselor.name if flag.counselor else
+                                    'Unassigned' }}</p>
+                            </div>
+                        </div>
+                        {% if not flag.reviewed %}
+                        <span class="risk-badge high">Unreviewed</span>
+                        {% else %}
+                        <span class="risk-badge reviewed">Reviewed</span>
+                        {% endif %}
+                    </div>
+
+                    <div class="flag-content">
+                        <div class="flag-keywords">
+                            <strong>Detected Keywords:</strong>
+                            {% for keyword in flag.detected_keywords %}
+                            <span class="keyword-tag">{{ keyword }}</span>
+                            {% endfor %}
+                        </div>
+
+                        <div class="flag-message">
+                            <p><strong>Student Message:</strong></p>
+                            <p class="message-text">{{ flag.message.content if
+                                flag.message else 'Message unavailable' }}</p>
+                        </div>
+
+                        <div class="flag-ai-response">
+                            <p><strong>AI Response:</strong></p>
+                            <p class="response-text">{{ flag.message.ai_response
+                                if flag.message else 'Response unavailable' }}
+                            </p>
+                        </div>
+                    </div>
+
+                    {% if flag.reviewed %}
+                    <div class="flag-reviewed-info">
+                        <p><strong>Reviewed:</strong> {{
+                            flag.reviewed_at.strftime('%B %d, %Y at %I:%M %p')
+                            if flag.reviewed_at else 'Unknown' }}</p>
+                        <p><strong>Reviewed by:</strong> {{ flag.counselor.name
+                            if flag.counselor else 'Unknown' }}</p>
+                        {% if flag.notes %}
+                        <p><strong>Notes:</strong> {{ flag.notes }}</p>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="empty-state-large">
+                <svg
+                    width="64"
+                    height="64"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                >
+                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                    <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                </svg>
+                <h3>No Flagged Messages</h3>
+                <p>No high-risk messages in the system.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</body>
+
+</html>

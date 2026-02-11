@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+    <title>Student Login - IMHSS</title>
+    <link
+        rel="stylesheet"
+        href="/static/css/student_login.css"
+    >
+</head>
+
+<body>
+    <div class="student-login-container">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        {% for category, message in messages %}
+        <div class="alert alert-{{ category }}">{{ message }}</div>
+        {% endfor %}
+        {% endif %}
+        {% endwith %}
+        <div class="student-login-wrapper">
+            <!-- Header -->
+            <div class="student-login-header">
+                <div class="student-logo">
+                    <svg
+                        width="60"
+                        height="60"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                    >
+                        <path
+                            d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"
+                        ></path>
+                    </svg>
+                </div>
+                <h1 class="student-login-title">IMHSS</h1>
+                <p class="student-login-subtitle">Student Mental Health Support
+                </p>
+            </div>
+
+            <!-- Login Card -->
+            <div class="student-login-card">
+                <h2 class="student-access-title">Student Access</h2>
+                <p class="student-access-subtitle">Enter your access token to
+                    continue</p>
+
+                <form
+                    method="POST"
+                    action="{{ url_for('IMHSS.student_login') }}"
+                    class="student-login-form"
+                >
+                    <div class="student-form-group">
+                        <label
+                            for="token"
+                            class="student-label"
+                        >Access Token</label>
+                        <div class="student-input-wrapper">
+                            <svg
+                                class="input-icon"
+                                width="18"
+                                height="18"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="2"
+                            >
+                                <circle
+                                    cx="7.5"
+                                    cy="15.5"
+                                    r="5.5"
+                                ></circle>
+                                <path d="M21 2l-9.6 9.6"></path>
+                            </svg>
+                            <input
+                                type="text"
+                                id="token"
+                                name="token"
+                                placeholder="XXXXXXXX"
+                                class="student-token-input"
+                                required
+                            >
+                        </div>
+                        <small class="student-help-text">Your counselor will
+                            provide you with this token</small>
+                    </div>
+
+                    <button
+                        type="submit"
+                        class="student-submit-btn"
+                    >
+                        Access Portal
+                    </button>
+                </form>
+            </div>
+
+            <!-- Footer -->
+            <div class="student-login-footer">
+                <p>Need help? Contact your counselor or student services.</p>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>

@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+    <title>Counselor Login - IMHSS</title>
+    <link
+        rel="stylesheet"
+        href="/static/css/style.css"
+    >
+</head>
+
+<body>
+    <div class="staff-login-container">
+        <!-- Flash Messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        {% for category, message in messages %}
+        <div class="alert alert-{{ category }}">
+            {{ message }}
+        </div>
+        {% endfor %}
+        {% endif %}
+        {% endwith %}
+
+        <div class="staff-login-wrapper">
+            <!-- Logo and Header -->
+            <div class="staff-login-header">
+                <div class="staff-logo">
+                    <svg
+                        width="60"
+                        height="60"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                    >
+                        <path
+                            d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"
+                        ></path>
+                    </svg>
+                </div>
+                <h1 class="staff-login-title">IMHSS</h1>
+                <p class="staff-login-subtitle">Student Mental Health Support
+                </p>
+            </div>
+
+            <!-- Login Card -->
+            <div class="staff-login-card">
+                <h2 class="staff-access-title">Staff Login</h2>
+                <p class="staff-access-subtitle">Please enter your login
+                    credentials</p>
+
+                <form
+                    method="POST"
+                    action="{{ url_for('IMHSS.counselor_login') }}"
+                    class="staff-login-form"
+                >
+                    <!-- Email Field -->
+                    <div class="staff-form-group">
+                        <label
+                            for="InputEmail1"
+                            class="staff-label"
+                        >Email Address</label>
+                        <div class="staff-input-wrapper">
+                            <svg
+                                class="input-icon"
+                                width="20"
+                                height="20"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="2"
+                            >
+                                <path
+                                    d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"
+                                ></path>
+                                <polyline points="22,6 12,13 2,6"></polyline>
+                            </svg>
+                            <input
+                                type="email"
+                                id="InputEmail1"
+                                name="email"
+                                placeholder="admin@university.edu"
+                                class="staff-input"
+                                required
+                            >
+                        </div>
+                    </div>
+
+                    <!-- Password Field -->
+                    <div class="staff-form-group">
+                        <label
+                            for="InputPassword1"
+                            class="staff-label"
+                        >Password</label>
+                        <div class="staff-input-wrapper">
+                            <svg
+                                class="input-icon"
+                                width="20"
+                                height="20"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="2"
+                            >
+                                <rect
+                                    x="3"
+                                    y="11"
+                                    width="18"
+                                    height="11"
+                                    rx="2"
+                                    ry="2"
+                                ></rect>
+                                <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                            </svg>
+                            <input
+                                type="password"
+                                id="InputPassword1"
+                                name="password"
+                                placeholder="••••••••"
+                                class="staff-input"
+                                required
+                            >
+                        </div>
+                    </div>
+
+                    <!-- Forgot Password Link -->
+                    <div class="staff-forgot-password">
+                        <a
+                            href="#"
+                            class="forgot-link"
+                        >Forgot password?</a>
+                    </div>
+
+                    <!-- Submit Button -->
+                    <button
+                        type="submit"
+                        class="staff-submit-btn"
+                    >
+                        Login
+                    </button>
+                </form>
+
+                <!-- Student Link -->
+                <div class="staff-switch-link">
+                    <p>Are you a student? <a
+                            href="{{ url_for('IMHSS.student_login') }}"
+                        >Student Login</a></p>
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <div class="staff-login-footer">
+                <p>Need help? Contact system administrator or student services.
+                </p>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>

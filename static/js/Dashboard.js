@@ -1,0 +1,393 @@
+// dashboard.js - Modern Dashboard Navigation
+
+document.addEventListener('DOMContentLoaded', function() {
+    
+    // ========== SIDEBAR NAVIGATION ==========
+    const sidebarLinks = document.querySelectorAll('.sidebar-link');
+    const tabContents = document.querySelectorAll('.tab-content');
+    
+    sidebarLinks.forEach(link => {
+        link.addEventListener('click', function(e) {
+            e.preventDefault();
+            
+            // Remove active class from all links
+            sidebarLinks.forEach(l => l.classList.remove('active'));
+            
+            // Add active class to clicked link
+            this.classList.add('active');
+            
+            // Get target tab
+            const targetTab = this.getAttribute('data-tab');
+            
+            // Hide all tabs
+            tabContents.forEach(tab => tab.classList.remove('active'));
+            
+            // Show target tab
+            const targetElement = document.getElementById(`${targetTab}-tab`);
+            if (targetElement) {
+                targetElement.classList.add('active');
+            }
+        });
+    });
+    
+    // ========== SECTION TABS NAVIGATION ==========
+    const sectionTabs = document.querySelectorAll('.section-tab');
+    const contentSections = document.querySelectorAll('.content-section-area');
+    
+    sectionTabs.forEach(tab => {
+        tab.addEventListener('click', function() {
+            // Remove active class from all tabs
+            sectionTabs.forEach(t => t.classList.remove('active'));
+            
+            // Add active class to clicked tab
+            this.classList.add('active');
+            
+            // Get target section
+            const targetSection = this.getAttribute('data-section');
+            
+            // Hide all sections
+            contentSections.forEach(section => section.classList.remove('active'));
+            
+            // Show target section
+            const targetElement = document.getElementById(targetSection);
+            if (targetElement) {
+                targetElement.classList.add('active');
+            }
+        });
+    });
+    
+    // ========== AUTO-HIDE ALERTS ==========
+    setTimeout(() => {
+        const alerts = document.querySelectorAll('.alert');
+        alerts.forEach(alert => {
+            alert.style.display = 'none';
+        });
+    }, 4000);
+    
+});
+// ========================================
+// MODERN REAL-TIME NOTIFICATION SYSTEM
+// ========================================
+
+// Only run on counselor dashboard
+if (window.location.pathname.includes('counselor/dashboard')) {
+    let lastNotificationCount = 0;
+    let notificationQueue = [];
+    
+    // Check for new notifications every 30 seconds
+    setInterval(async function() {
+        await checkForNewNotifications();
+    }, 30000);
+    
+    // Initial check on page load
+    setTimeout(checkForNewNotifications, 2000);
+    
+    async function checkForNewNotifications() {
+        try {
+            const response = await fetch('/counselor/check-notifications');
+            const data = await response.json();
+            
+            // If there are new notifications
+            if (data.count > lastNotificationCount && lastNotificationCount > 0) {
+                const newFlags = data.count - lastNotificationCount;
+                
+                // Show in-app notification for each new flag
+                data.flags.slice(0, newFlags).forEach((flag, index) => {
+                    setTimeout(() => {
+                        showInAppNotification(flag);
+                    }, index * 500); // Stagger notifications by 500ms
+                });
+                
+                // Show browser notification (only one summary)
+                showBrowserNotification(`${newFlags} New High-Risk Alert(s)`, data.flags[0]);
+                
+                // Play notification sound
+                playNotificationSound();
+            }
+            
+            // Update badge count
+            updateNotificationBadge(data.count);
+            
+            // Update last known count
+            lastNotificationCount = data.count;
+            
+        } catch (error) {
+            console.error('Notification check failed:', error);
+        }
+    }
+    
+    // ========================================
+    // IN-APP NOTIFICATION (MODERN TOAST)
+    // ========================================
+    function showInAppNotification(flag) {
+        // Create notification container if it doesn't exist
+        let container = document.getElementById('notification-container');
+        if (!container) {
+            container = document.createElement('div');
+            container.id = 'notification-container';
+            document.body.appendChild(container);
+        }
+        
+        // Create notification element
+        const notification = document.createElement('div');
+        notification.className = 'toast-notification';
+        
+        // Format time
+        const timeAgo = getTimeAgo(new Date(flag.flagged_at));
+        
+        notification.innerHTML = `
+            <div class="toast-icon">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+                    <line x1="12" y1="9" x2="12" y2="13"></line>
+                    <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                </svg>
+            </div>
+            <div class="toast-content">
+                <div class="toast-header">
+                    <h4>High-Risk Alert</h4>
+                    <span class="toast-time">${timeAgo}</span>
+                </div>
+                <p class="toast-student">${flag.student_name}</p>
+                <p class="toast-keywords">
+                    ${flag.keywords.map(k => `<span class="keyword-pill">${k}</span>`).join(' ')}
+                </p>
+                <div class="toast-actions">
+                    <button class="toast-btn primary" onclick="viewFlaggedMessages()">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                            <circle cx="12" cy="12" r="3"></circle>
+                        </svg>
+                        Review Now
+                    </button>
+                    <button class="toast-btn dismiss" onclick="this.closest('.toast-notification').remove()">
+                        Dismiss
+                    </button>
+                </div>
+            </div>
+            <button class="toast-close" onclick="this.parentElement.remove()">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+            </button>
+        `;
+        
+        // Add to container
+        container.appendChild(notification);
+        
+        // Animate in
+        setTimeout(() => {
+            notification.classList.add('show');
+        }, 100);
+        
+        // Auto-remove after 10 seconds
+        setTimeout(() => {
+            notification.classList.add('hide');
+            setTimeout(() => {
+                notification.remove();
+            }, 300);
+        }, 10000);
+    }
+    
+    // ========================================
+    // BROWSER NOTIFICATION (DESKTOP)
+    // ========================================
+    function showBrowserNotification(title, flag) {
+        if (!("Notification" in window)) return;
+        
+        if (Notification.permission === "granted") {
+            createBrowserNotification(title, flag);
+        } else if (Notification.permission !== "denied") {
+            Notification.requestPermission().then(function(permission) {
+                if (permission === "granted") {
+                    createBrowserNotification(title, flag);
+                }
+            });
+        }
+    }
+    
+    function createBrowserNotification(title, flag) {
+        const notification = new Notification(title, {
+            body: `Student: ${flag.student_name}\nKeywords: ${flag.keywords.join(', ')}`,
+            icon: '/static/images/alert-icon.png',
+            badge: '/static/images/badge-icon.png',
+            tag: 'high-risk-alert',
+            requireInteraction: true,
+            vibrate: [200, 100, 200]
+        });
+        
+        notification.onclick = function() {
+            window.focus();
+            viewFlaggedMessages();
+            notification.close();
+        };
+    }
+    
+    // ========================================
+    // NOTIFICATION BADGE
+    // ========================================
+    function updateNotificationBadge(count) {
+        const flaggedLink = document.querySelector('[data-tab="flagged"]');
+        if (!flaggedLink) return;
+        
+        // Remove existing badge
+        const existingBadge = flaggedLink.querySelector('.notification-badge');
+        if (existingBadge) {
+            existingBadge.remove();
+        }
+        
+        // Add new badge if count > 0
+        if (count > 0) {
+            const badge = document.createElement('span');
+            badge.className = 'notification-badge';
+            badge.textContent = count > 99 ? '99+' : count;
+            flaggedLink.appendChild(badge);
+            
+            // Animate badge
+            setTimeout(() => {
+                badge.classList.add('bounce');
+            }, 100);
+        }
+    }
+    
+    // ========================================
+    // NOTIFICATION SOUND
+    // ========================================
+    function playNotificationSound() {
+        // Create a pleasant notification sound using Web Audio API
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        
+        // Create oscillator for a pleasant "ding" sound
+        const oscillator = audioContext.createOscillator();
+        const gainNode = audioContext.createGain();
+        
+        oscillator.connect(gainNode);
+        gainNode.connect(audioContext.destination);
+        
+        // Set frequency for a pleasant tone
+        oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
+        oscillator.frequency.exponentialRampToValueAtTime(600, audioContext.currentTime + 0.1);
+        
+        // Set volume envelope
+        gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+        
+        // Play sound
+        oscillator.start(audioContext.currentTime);
+        oscillator.stop(audioContext.currentTime + 0.5);
+    }
+    
+    // ========================================
+    // HELPER FUNCTIONS
+    // ========================================
+    function getTimeAgo(date) {
+        const seconds = Math.floor((new Date() - date) / 1000);
+        
+        if (seconds < 60) return 'Just now';
+        if (seconds < 3600) return `${Math.floor(seconds / 60)} min ago`;
+        if (seconds < 86400) return `${Math.floor(seconds / 3600)} hours ago`;
+        return `${Math.floor(seconds / 86400)} days ago`;
+    }
+    
+    console.log('🔔 Modern notification system enabled');
+}
+
+// ========================================
+// GLOBAL HELPER FUNCTIONS
+// ========================================
+function viewFlaggedMessages() {
+    const flaggedTab = document.querySelector('[data-tab="flagged"]');
+    if (flaggedTab) {
+        flaggedTab.click();
+        // Scroll to top
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+}
+
+// ========================================
+// NOTIFICATION PERMISSION HANDLER
+// ========================================
+const enableNotificationsBtn = document.getElementById('enable-notifications-btn');
+
+if (enableNotificationsBtn) {
+    // Show button if notifications not granted
+    if (Notification.permission !== "granted") {
+        enableNotificationsBtn.style.display = 'flex';
+    }
+    
+    enableNotificationsBtn.addEventListener('click', async function() {
+        if (!("Notification" in window)) {
+            showPermissionModal(
+                'Not Supported',
+                'Your browser doesn\'t support desktop notifications.',
+                false
+            );
+            return;
+        }
+        
+        const permission = await Notification.requestPermission();
+        
+        if (permission === "granted") {
+            showPermissionModal(
+                'Notifications Enabled!',
+                'You\'ll now receive real-time alerts for high-risk messages.',
+                true
+            );
+            this.style.display = 'none';
+            
+            // Show test notification
+            setTimeout(() => {
+                showInAppNotification({
+                    student_name: 'Test Student',
+                    flagged_at: new Date().toISOString(),
+                    keywords: ['test notification']
+                });
+            }, 1000);
+        } else {
+            showPermissionModal(
+                'Notifications Blocked',
+                'Please enable notifications in your browser settings to receive alerts.',
+                false
+            );
+        }
+    });
+}
+
+function showPermissionModal(title, message, success) {
+    const modal = document.createElement('div');
+    modal.className = 'notification-permission-modal';
+    modal.innerHTML = `
+        <div class="notification-permission-content">
+            <div class="icon">
+                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    ${success 
+                        ? '<polyline points="20 6 9 17 4 12"></polyline>'
+                        : '<circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line>'
+                    }
+                </svg>
+            </div>
+            <h3>${title}</h3>
+            <p>${message}</p>
+            <div class="permission-actions">
+                <button class="permission-btn allow" onclick="this.closest('.notification-permission-modal').remove()">
+                    Got it
+                </button>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+    
+    // Close on outside click
+    modal.addEventListener('click', function(e) {
+        if (e.target === modal) {
+            modal.remove();
+        }
+    });
+    
+    // Auto-close after 3 seconds
+    setTimeout(() => {
+        modal.remove();
+    }, 3000);
+}

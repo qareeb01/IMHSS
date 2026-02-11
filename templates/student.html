@@ -1,0 +1,844 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+    <title>Student Dashboard - IMHSS</title>
+    <link
+        rel="stylesheet"
+        href="/static/css/student_dashboard.css"
+    >
+</head>
+
+<body>
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    {% for category, message in messages %}
+    <div class="alert alert-{{ category }}">{{ message }}</div>
+    {% endfor %}
+    {% endif %}
+    {% endwith %}
+
+    <div class="student-dashboard-layout">
+        <!-- LEFT SIDEBAR NAVIGATION -->
+        <aside class="student-sidebar">
+            <!-- Logo Section -->
+            <div class="sidebar-header">
+                <div class="logo-icon">
+                    <svg
+                        width="40"
+                        height="40"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                    >
+                        <path
+                            d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"
+                        ></path>
+                    </svg>
+                </div>
+                <h2 class="sidebar-title">IMHSS</h2>
+                <p class="sidebar-subtitle">Your Wellbeing Companion</p>
+            </div>
+
+            <!-- Navigation Links -->
+            <nav class="sidebar-nav">
+                <a
+                    href="#chat"
+                    class="sidebar-link active"
+                    data-section="chat"
+                >
+                    <svg
+                        width="20"
+                        height="20"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                    >
+                        <path
+                            d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"
+                        ></path>
+                    </svg>
+                    <span>Chat Support</span>
+                </a>
+
+                <a
+                    href="#breathing"
+                    class="sidebar-link"
+                    data-section="breathing"
+                >
+                    <svg
+                        width="20"
+                        height="20"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                    >
+                        <circle
+                            cx="12"
+                            cy="12"
+                            r="10"
+                        ></circle>
+                        <path d="M12 6v6l4 2"></path>
+                    </svg>
+                    <span>Breathing Exercises</span>
+                </a>
+
+                <a
+                    href="#stretching"
+                    class="sidebar-link"
+                    data-section="stretching"
+                >
+                    <svg
+                        width="20"
+                        height="20"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                    >
+                        <path d="M22 12h-4l-3 9L9 3l-3 9H2"></path>
+                    </svg>
+                    <span>Stretching</span>
+                </a>
+
+                <a
+                    href="#mood"
+                    class="sidebar-link"
+                    data-section="mood"
+                >
+                    <svg
+                        width="20"
+                        height="20"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                    >
+                        <circle
+                            cx="12"
+                            cy="12"
+                            r="10"
+                        ></circle>
+                        <path d="M8 14s1.5 2 4 2 4-2 4-2"></path>
+                        <line
+                            x1="9"
+                            y1="9"
+                            x2="9.01"
+                            y2="9"
+                        ></line>
+                        <line
+                            x1="15"
+                            y1="9"
+                            x2="15.01"
+                            y2="9"
+                        ></line>
+                    </svg>
+                    <span>Mood Tracker</span>
+                </a>
+
+                <a
+                    href="#tips"
+                    class="sidebar-link"
+                    data-section="tips"
+                >
+                    <svg
+                        width="20"
+                        height="20"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                    >
+                        <circle
+                            cx="12"
+                            cy="12"
+                            r="10"
+                        ></circle>
+                        <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+                        <line
+                            x1="12"
+                            y1="17"
+                            x2="12.01"
+                            y2="17"
+                        ></line>
+                    </svg>
+                    <span>Wellness Tips</span>
+                </a>
+            </nav>
+
+            <!-- User Profile -->
+            <div class="sidebar-footer">
+                <div class="user-profile">
+                    <div class="user-avatar">
+                        <svg
+                            width="24"
+                            height="24"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2"
+                        >
+                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2">
+                            </path>
+                            <circle
+                                cx="12"
+                                cy="7"
+                                r="4"
+                            ></circle>
+                        </svg>
+                    </div>
+                    <div class="user-info">
+                        <p class="user-name">{{ session.get('name', 'Student')
+                            }}</p>
+                        <p class="user-role">Student</p>
+                    </div>
+                </div>
+                <a
+                    href="{{ url_for('IMHSS.logout') }}"
+                    class="logout-btn"
+                >
+                    <svg
+                        width="20"
+                        height="20"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                    >
+                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4">
+                        </path>
+                        <polyline points="16 17 21 12 16 7"></polyline>
+                        <line
+                            x1="21"
+                            y1="12"
+                            x2="9"
+                            y2="12"
+                        ></line>
+                    </svg>
+                    <span>Logout</span>
+                </a>
+            </div>
+        </aside>
+
+        <!-- MAIN CONTENT -->
+        <main class="student-main-content">
+            <!-- CHAT SECTION -->
+            <section
+                id="chat-section"
+                class="content-section active"
+            >
+                <div class="section-header">
+                    <h1>Chat Support</h1>
+                    <p class="section-subtitle">Talk freely about how you're
+                        feeling</p>
+                </div>
+
+                <div class="chat-container">
+                    <div
+                        id="chat-messages"
+                        class="chat-messages"
+                    >
+                        <div class="message ai-message">
+                            <div class="message-content">
+                                <p>Hi! I'm here to listen. How are you feeling
+                                    today?</p>
+                            </div>
+                            <span class="message-time">Just now</span>
+                        </div>
+                    </div>
+
+                    <div
+                        id="typing-indicator"
+                        class="typing-indicator"
+                        style="display: none;"
+                    >
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </div>
+
+                    <div class="chat-input-container">
+                        <textarea
+                            id="chat-input"
+                            class="chat-input"
+                            placeholder="Type your message here..."
+                            rows="1"
+                        ></textarea>
+                        <button
+                            id="send-btn"
+                            class="send-btn"
+                        >
+                            <svg
+                                width="24"
+                                height="24"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="2"
+                            >
+                                <line
+                                    x1="22"
+                                    y1="2"
+                                    x2="11"
+                                    y2="13"
+                                ></line>
+                                <polygon points="22 2 15 22 11 13 2 9 22 2">
+                                </polygon>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- BREATHING EXERCISES SECTION -->
+            <section
+                id="breathing-section"
+                class="content-section"
+            >
+                <div class="section-header">
+                    <h1>Breathing Exercises</h1>
+                    <p class="section-subtitle">Calm your mind with guided
+                        breathing</p>
+                </div>
+
+                <div class="exercises-grid">
+                    <!-- Box Breathing -->
+                    <div class="exercise-card">
+                        <div class="exercise-icon">
+                            <svg
+                                width="48"
+                                height="48"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="2"
+                            >
+                                <rect
+                                    x="3"
+                                    y="3"
+                                    width="18"
+                                    height="18"
+                                    rx="2"
+                                ></rect>
+                            </svg>
+                        </div>
+                        <h3>Box Breathing</h3>
+                        <p>4-4-4-4 pattern • 5 minutes</p>
+                        <button
+                            class="start-exercise-btn"
+                            data-exercise="box"
+                        >Start Exercise</button>
+                    </div>
+
+                    <!-- 4-7-8 Breathing -->
+                    <div class="exercise-card">
+                        <div class="exercise-icon">
+                            <svg
+                                width="48"
+                                height="48"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="2"
+                            >
+                                <circle
+                                    cx="12"
+                                    cy="12"
+                                    r="10"
+                                ></circle>
+                                <polyline points="12 6 12 12 16 14"></polyline>
+                            </svg>
+                        </div>
+                        <h3>4-7-8 Breathing</h3>
+                        <p>Relaxation technique • 3 minutes</p>
+                        <button
+                            class="start-exercise-btn"
+                            data-exercise="478"
+                        >Start Exercise</button>
+                    </div>
+
+                    <!-- Deep Breathing -->
+                    <div class="exercise-card">
+                        <div class="exercise-icon">
+                            <svg
+                                width="48"
+                                height="48"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="2"
+                            >
+                                <path d="M3 12h4l3 9 4-18 3 9h4"></path>
+                            </svg>
+                        </div>
+                        <h3>Deep Breathing</h3>
+                        <p>Simple & effective • 5 minutes</p>
+                        <button
+                            class="start-exercise-btn"
+                            data-exercise="deep"
+                        >Start Exercise</button>
+                    </div>
+                </div>
+
+                <!-- Breathing Timer Modal -->
+                <div
+                    id="breathing-modal"
+                    class="exercise-modal"
+                    style="display: none;"
+                >
+                    <div class="modal-content">
+                        <button class="close-modal-btn">&times;</button>
+                        <h2 id="exercise-title">Box Breathing</h2>
+                        <div
+                            class="breathing-circle"
+                            id="breathing-circle"
+                        ></div>
+                        <p
+                            class="breathing-instruction"
+                            id="breathing-instruction"
+                        >Breathe In</p>
+                        <p
+                            class="breathing-timer"
+                            id="breathing-timer"
+                        >4</p>
+                        <button
+                            id="stop-breathing-btn"
+                            class="stop-btn"
+                        >Stop Exercise</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- STRETCHING SECTION -->
+            <section
+                id="stretching-section"
+                class="content-section"
+            >
+                <div class="section-header">
+                    <h1>Stretching Exercises</h1>
+                    <p class="section-subtitle">Release tension and improve
+                        flexibility</p>
+                </div>
+
+                <div class="exercises-grid">
+                    <!-- Neck Stretch -->
+                    <div class="exercise-card">
+                        <div class="exercise-icon">
+                            <svg
+                                width="48"
+                                height="48"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="2"
+                            >
+                                <circle
+                                    cx="12"
+                                    cy="8"
+                                    r="4"
+                                ></circle>
+                                <path d="M12 12v10"></path>
+                            </svg>
+                        </div>
+                        <h3>Neck Stretches</h3>
+                        <p>4 stretches • 2 minutes</p>
+                        <button
+                            class="start-exercise-btn"
+                            data-stretch="neck"
+                        >Start Stretching</button>
+                    </div>
+
+                    <!-- Shoulder Stretch -->
+                    <div class="exercise-card">
+                        <div class="exercise-icon">
+                            <svg
+                                width="48"
+                                height="48"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="2"
+                            >
+                                <path d="M18 8L22 12L18 16"></path>
+                                <path d="M6 8L2 12L6 16"></path>
+                                <line
+                                    x1="12"
+                                    y1="2"
+                                    x2="12"
+                                    y2="22"
+                                ></line>
+                            </svg>
+                        </div>
+                        <h3>Shoulder Rolls</h3>
+                        <p>Release tension • 3 minutes</p>
+                        <button
+                            class="start-exercise-btn"
+                            data-stretch="shoulder"
+                        >Start Stretching</button>
+                    </div>
+
+                    <!-- Full Body Stretch -->
+                    <div class="exercise-card">
+                        <div class="exercise-icon">
+                            <svg
+                                width="48"
+                                height="48"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="2"
+                            >
+                                <path d="M12 2v20"></path>
+                                <path d="M17 7l5 5-5 5"></path>
+                                <path d="M7 7l-5 5 5 5"></path>
+                            </svg>
+                        </div>
+                        <h3>Full Body Stretch</h3>
+                        <p>Complete routine • 5 minutes</p>
+                        <button
+                            class="start-exercise-btn"
+                            data-stretch="fullbody"
+                        >Start Stretching</button>
+                    </div>
+                </div>
+
+                <!-- Stretching Timer Modal -->
+                <div
+                    id="stretching-modal"
+                    class="exercise-modal"
+                    style="display: none;"
+                >
+                    <div class="modal-content">
+                        <button class="close-modal-btn">&times;</button>
+                        <h2 id="stretch-title">Neck Stretches</h2>
+                        <div
+                            class="stretch-illustration"
+                            id="stretch-illustration"
+                        >
+                            <svg
+                                width="200"
+                                height="200"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="2"
+                            >
+                                <circle
+                                    cx="12"
+                                    cy="8"
+                                    r="4"
+                                ></circle>
+                                <path d="M12 12v10"></path>
+                            </svg>
+                        </div>
+                        <p
+                            class="stretch-instruction"
+                            id="stretch-instruction"
+                        >Tilt your head to the right</p>
+                        <p
+                            class="stretch-timer"
+                            id="stretch-timer"
+                        >30s</p>
+                        <div class="stretch-progress">
+                            <div
+                                class="stretch-progress-bar"
+                                id="stretch-progress-bar"
+                            ></div>
+                        </div>
+                        <button
+                            id="next-stretch-btn"
+                            class="next-btn"
+                        >Next Stretch</button>
+                        <button
+                            id="stop-stretch-btn"
+                            class="stop-btn"
+                        >Stop Exercise</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- MOOD TRACKER SECTION -->
+            <section
+                id="mood-section"
+                class="content-section"
+            >
+                <div class="section-header">
+                    <h1>Mood Tracker</h1>
+                    <p class="section-subtitle">Track how you're feeling today
+                    </p>
+                </div>
+
+                <div class="mood-selector">
+                    <h3>How are you feeling right now?</h3>
+                    <div class="mood-grid">
+                        <button
+                            class="mood-btn"
+                            data-mood="great"
+                        >
+                            <svg
+                                width="60"
+                                height="60"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="2"
+                            >
+                                <circle
+                                    cx="12"
+                                    cy="12"
+                                    r="10"
+                                ></circle>
+                                <path d="M8 14s1.5 2 4 2 4-2 4-2"></path>
+                                <line
+                                    x1="9"
+                                    y1="9"
+                                    x2="9.01"
+                                    y2="9"
+                                ></line>
+                                <line
+                                    x1="15"
+                                    y1="9"
+                                    x2="15.01"
+                                    y2="9"
+                                ></line>
+                            </svg>
+                            <span>Great</span>
+                        </button>
+                        <button
+                            class="mood-btn"
+                            data-mood="good"
+                        >
+                            <svg
+                                width="60"
+                                height="60"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="2"
+                            >
+                                <circle
+                                    cx="12"
+                                    cy="12"
+                                    r="10"
+                                ></circle>
+                                <path d="M8 15h8"></path>
+                                <line
+                                    x1="9"
+                                    y1="9"
+                                    x2="9.01"
+                                    y2="9"
+                                ></line>
+                                <line
+                                    x1="15"
+                                    y1="9"
+                                    x2="15.01"
+                                    y2="9"
+                                ></line>
+                            </svg>
+                            <span>Good</span>
+                        </button>
+                        <button
+                            class="mood-btn"
+                            data-mood="okay"
+                        >
+                            <svg
+                                width="60"
+                                height="60"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="2"
+                            >
+                                <circle
+                                    cx="12"
+                                    cy="12"
+                                    r="10"
+                                ></circle>
+                                <line
+                                    x1="8"
+                                    y1="15"
+                                    x2="16"
+                                    y2="15"
+                                ></line>
+                                <line
+                                    x1="9"
+                                    y1="9"
+                                    x2="9.01"
+                                    y2="9"
+                                ></line>
+                                <line
+                                    x1="15"
+                                    y1="9"
+                                    x2="15.01"
+                                    y2="9"
+                                ></line>
+                            </svg>
+                            <span>Okay</span>
+                        </button>
+                        <button
+                            class="mood-btn"
+                            data-mood="bad"
+                        >
+                            <svg
+                                width="60"
+                                height="60"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="2"
+                            >
+                                <circle
+                                    cx="12"
+                                    cy="12"
+                                    r="10"
+                                ></circle>
+                                <path d="M16 16s-1.5-2-4-2-4 2-4 2"></path>
+                                <line
+                                    x1="9"
+                                    y1="9"
+                                    x2="9.01"
+                                    y2="9"
+                                ></line>
+                                <line
+                                    x1="15"
+                                    y1="9"
+                                    x2="15.01"
+                                    y2="9"
+                                ></line>
+                            </svg>
+                            <span>Not Great</span>
+                        </button>
+                        <button
+                            class="mood-btn"
+                            data-mood="terrible"
+                        >
+                            <svg
+                                width="60"
+                                height="60"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="2"
+                            >
+                                <circle
+                                    cx="12"
+                                    cy="12"
+                                    r="10"
+                                ></circle>
+                                <path d="M16 18s-1.5-3-4-3-4 3-4 3"></path>
+                                <line
+                                    x1="9"
+                                    y1="9"
+                                    x2="9.01"
+                                    y2="9"
+                                ></line>
+                                <line
+                                    x1="15"
+                                    y1="9"
+                                    x2="15.01"
+                                    y2="9"
+                                ></line>
+                            </svg>
+                            <span>Terrible</span>
+                        </button>
+                    </div>
+                    <div
+                        id="mood-message"
+                        class="mood-message"
+                    ></div>
+                </div>
+
+                <div class="mood-history">
+                    <h3>Your Mood This Week</h3>
+                    <div
+                        class="mood-chart"
+                        id="mood-chart"
+                    >
+                        <p class="empty-state">Start tracking your mood to see
+                            your weekly progress!</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- WELLNESS TIPS SECTION -->
+            <section
+                id="tips-section"
+                class="content-section"
+            >
+                <div class="section-header">
+                    <h1>Wellness Tips</h1>
+                    <p class="section-subtitle">Quick tips for better mental
+                        health</p>
+                </div>
+
+                <div class="tips-grid">
+                    <div class="tip-card">
+                        <div class="tip-icon">💧</div>
+                        <h3>Stay Hydrated</h3>
+                        <p>Drink water regularly throughout the day. Dehydration
+                            can affect mood and energy levels.</p>
+                    </div>
+                    <div class="tip-card">
+                        <div class="tip-icon">🌙</div>
+                        <h3>Quality Sleep</h3>
+                        <p>Aim for 7-9 hours of sleep. Keep a consistent sleep
+                            schedule for better rest.</p>
+                    </div>
+                    <div class="tip-card">
+                        <div class="tip-icon">🏃</div>
+                        <h3>Move Your Body</h3>
+                        <p>Even 10 minutes of movement can boost your mood. Take
+                            a walk or stretch.</p>
+                    </div>
+                    <div class="tip-card">
+                        <div class="tip-icon">🤝</div>
+                        <h3>Connect with Others</h3>
+                        <p>Reach out to friends or family. Social connection is
+                            vital for mental health.</p>
+                    </div>
+                    <div class="tip-card">
+                        <div class="tip-icon">📱</div>
+                        <h3>Limit Screen Time</h3>
+                        <p>Take breaks from devices, especially before bed. Try
+                            the 20-20-20 rule.</p>
+                    </div>
+                    <div class="tip-card">
+                        <div class="tip-icon">🎯</div>
+                        <h3>Set Small Goals</h3>
+                        <p>Break tasks into manageable steps. Celebrate small
+                            wins along the way.</p>
+                    </div>
+                </div>
+
+                <div class="emergency-contact">
+                    <h3>Need Immediate Help?</h3>
+                    <p>If you're in crisis or experiencing thoughts of
+                        self-harm:</p>
+                    <div class="emergency-buttons">
+                        <button class="emergency-btn">📞 Campus Counseling:
+                            [Number]</button>
+                        <button class="emergency-btn">🚨 Emergency Services:
+                            112</button>
+                        <button class="emergency-btn">💬 Crisis Helpline:
+                            [Number]</button>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- JavaScript -->
+    <script
+        src="/static/js/student_dashboard.js"></script>
+</body>
+
+</html>

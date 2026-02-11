@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - IMHSS</title>
+    <link rel="stylesheet" href="/static/css/Dashboard.css">
+</head>
+<body>
+    <!-- FLASH MESSAGES -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    {% for category, message in messages %}
+    <div class="alert alert-{{ category }}">{{ message }}</div>
+    {% endfor %}
+    {% endif %}
+    {% endwith %}
+
+    <div class="dashboard-layout">
+        <!-- LEFT SIDEBAR -->
+        <aside class="sidebar-left">
+            <div class="sidebar-header">
+                <div class="logo-icon">
+                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+                    </svg>
+                </div>
+                <h2 class="sidebar-title">IMHSS</h2>
+                <p class="sidebar-subtitle">Mental Health Support</p>
+            </div>
+
+            <nav class="sidebar-nav">
+                <a href="#dashboard" class="sidebar-link active" data-tab="dashboard">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="3" width="7" height="7"></rect>
+                        <rect x="14" y="3" width="7" height="7"></rect>
+                        <rect x="14" y="14" width="7" height="7"></rect>
+                        <rect x="3" y="14" width="7" height="7"></rect>
+                    </svg>
+                    <span>Dashboard</span>
+                </a>
+
+                <a href="#counselors" class="sidebar-link" data-tab="counselors">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="9" cy="7" r="4"></circle>
+                        <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                        <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                    </svg>
+                    <span>Counselors</span>
+                </a>
+
+                <a href="#students" class="sidebar-link" data-tab="students">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="9" cy="7" r="4"></circle>
+                        <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                        <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                    </svg>
+                    <span>All Students</span>
+                </a>
+
+                <a href="#messages" class="sidebar-link" data-tab="messages">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                    </svg>
+                    <span>All Messages</span>
+                </a>
+
+                <a href="#flagged" class="sidebar-link" data-tab="flagged">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+                        <line x1="12" y1="9" x2="12" y2="13"></line>
+                        <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                    </svg>
+                    <span>Flagged Messages</span>
+                </a>
+            </nav>
+
+            <div class="sidebar-footer">
+                <div class="user-profile">
+                    <div class="user-avatar">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                            <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                        </svg>
+                    </div>
+                    <div class="user-info">
+                        <p class="user-email">{{ session.get('email', 'admin@imhss.app') }}</p>
+                        <p class="user-role">Admin</p>
+                    </div>
+                </div>
+                <a href="{{ url_for('IMHSS.logout') }}" class="signout-btn">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                        <polyline points="16 17 21 12 16 7"></polyline>
+                        <line x1="21" y1="12" x2="9" y2="12"></line>
+                    </svg>
+                    <span>Sign Out</span>
+                </a>
+            </div>
+        </aside>
+
+        <!-- MAIN CONTENT AREA -->
+        <main class="main-content-area">
+            <!-- DASHBOARD TAB -->
+            <section id="dashboard-tab" class="tab-content active">
+                <div class="content-header">
+                    <h1>Admin Dashboard</h1>
+                    <p class="content-subtitle">System overview and management</p>
+                </div>
+
+                <!-- Stats Cards Grid -->
+                <div class="stats-cards-grid">
+                    <div class="stat-card-modern teal">
+                        <div class="stat-content">
+                            <p class="stat-label">Counselors</p>
+                            <h2 class="stat-number">{{ counselor_count|default(0) }}</h2>
+                        </div>
+                        <div class="stat-icon">
+                            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                                <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                            </svg>
+                        </div>
+                    </div>
+
+                    <div class="stat-card-modern gray">
+                        <div class="stat-content">
+                            <p class="stat-label">Students</p>
+                            <h2 class="stat-number">{{ student_count|default(0) }}</h2>
+                        </div>
+                        <div class="stat-icon">
+                            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                                <circle cx="9" cy="7" r="4"></circle>
+                                <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                                <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                            </svg>
+                        </div>
+                    </div>
+
+                    <div class="stat-card-modern gray">
+                        <div class="stat-content">
+                            <p class="stat-label">Total Messages</p>
+                            <h2 class="stat-number">{{ total_messages|default(0) }}</h2>
+                        </div>
+                        <div class="stat-icon">
+                            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                            </svg>
+                        </div>
+                    </div>
+
+                    <div class="stat-card-modern orange">
+                        <div class="stat-content">
+                            <p class="stat-label">Flagged</p>
+                            <h2 class="stat-number">{{ flagged_count|default(0) }}</h2>
+                        </div>
+                        <div class="stat-icon">
+                            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+                                <line x1="12" y1="9" x2="12" y2="13"></line>
+                                <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Actions -->
+                <div class="quick-actions">
+                    <h3>Quick Actions</h3>
+                    <div class="action-buttons">
+                        <a href="{{ url_for('IMHSS.admin_create_counselor') }}" class="action-btn">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                                <circle cx="8.5" cy="7" r="4"></circle>
+                                <line x1="20" y1="8" x2="20" y2="14"></line>
+                                <line x1="23" y1="11" x2="17" y2="11"></line>
+                            </svg>
+                            Register Counselor
+                        </a>
+                        <a href="{{ url_for('IMHSS.admin_view_all_messages') }}" class="action-btn">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                            </svg>
+                            View All Messages
+                        </a>
+                        <a href="{{ url_for('IMHSS.admin_view_all_flags') }}" class="action-btn">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+                            </svg>
+                            View Flagged Messages
+                        </a>
+                    </div>
+                </div>
+
+                <!-- System Overview -->
+                <div class="system-overview">
+                    <h3>System Overview</h3>
+                    <div class="overview-grid">
+                        <div class="overview-card">
+                            <h4>Counselor Capacity</h4>
+                            <div class="capacity-bars">
+                                {% for counselor in counselors %}
+                                <div class="capacity-item">
+                                    <span class="counselor-name">{{ counselor.name }}</span>
+                                    <div class="capacity-bar-container">
+                                        <div class="capacity-bar" style="width: {{ counselor.capacity_percent | default(0) }}%"></div>
+                                    </div>
+                                    <span class="capacity-count">{{ counselor_student_counts.get(counselor._id|string, 0) }}/5</span>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+
+                        <div class="overview-card">
+                            <h4>Recent Activity</h4>
+                            <div class="activity-feed">
+                                <div class="activity-item-small">
+                                    <div class="activity-dot"></div>
+                                    <p>System monitoring active</p>
+                                </div>
+                                <div class="activity-item-small">
+                                    <div class="activity-dot"></div>
+                                    <p>{{ student_count|default(0) }} students registered</p>
+                                </div>
+                                <div class="activity-item-small">
+                                    <div class="activity-dot"></div>
+                                    <p>{{ counselor_count|default(0) }} counselors active</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- COUNSELORS TAB -->
+            <section id="counselors-tab" class="tab-content">
+                <div class="content-header">
+                    <h1>Registered Counselors</h1>
+                    <p class="content-subtitle">Manage counselor accounts</p>
+                </div>
+
+                <div class="section-header">
+                    <div></div>
+                    <a href="{{ url_for('IMHSS.admin_create_counselor') }}" class="btn-register">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                            <circle cx="8.5" cy="7" r="4"></circle>
+                            <line x1="20" y1="8" x2="20" y2="14"></line>
+                            <line x1="23" y1="11" x2="17" y2="11"></line>
+                        </svg>
+                        Register Counselor
+                    </a>
+                </div>
+
+                <div class="counselors-list">
+                    {% if counselors %}
+                    {% for counselor in counselors %}
+                    <div class="counselor-card">
+                        <div class="counselor-info">
+                            <h4>{{ counselor.name }}</h4>
+                            <p class="counselor-dept">{{ counselor.department }}</p>
+                            <p class="counselor-email">{{ counselor.email }}</p>
+                            {% if counselor.status == 'blocked' %}
+                            <span class="status-badge blocked">Blocked</span>
+                            {% else %}
+                            <span class="status-badge active">Active</span>
+                            {% endif %}
+                        </div>
+                        <div class="counselor-stats">
+                            <span class="capacity-badge">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                                    <circle cx="9" cy="7" r="4"></circle>
+                                    <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                                    <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                                </svg>
+                                {{ counselor_student_counts.get(counselor._id|string, 0) }}/5
+                            </span>
+                            <form method="POST" action="{{ url_for('IMHSS.admin_toggle_user_status') }}" style="display: inline;">
+                                <input type="hidden" name="user_id" value="{{ counselor._id }}">
+                                {% if counselor.status == 'blocked' %}
+                                <button type="submit" class="btn-toggle unblock">Unblock</button>
+                                {% else %}
+                                <button type="submit" class="btn-toggle block">Block</button>
+                                {% endif %}
+                            </form>
+                        </div>
+                    </div>
+                    {% endfor %}
+                    {% else %}
+                    <div class="empty-state">
+                        <p>No counselors registered yet</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </section>
+
+            <!-- STUDENTS TAB -->
+            <section id="students-tab" class="tab-content">
+                <div class="content-header">
+                    <h1>All Students</h1>
+                    <p class="content-subtitle">View all registered students</p>
+                </div>
+
+                <div class="students-grid">
+                    {% if students %}
+                    {% for student in students %}
+                    <div class="student-card-detailed">
+                        <div class="student-header">
+                            <div class="student-avatar">
+                                {{ student.name[0].upper() }}
+                            </div>
+                            <div class="student-info">
+                                <h4>{{ student.name }}</h4>
+                                <p class="student-matric">{{ student.matric }}</p>
+                                <p class="student-dept">{{ student.department }}</p>
+                            </div>
+                            {% if student.token_used %}
+                            <span class="status-badge active">Active</span>
+                            {% else %}
+                            <span class="status-badge pending">Pending</span>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="student-details">
+                            <div class="detail-row">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+                                    <polyline points="22,6 12,13 2,6"></polyline>
+                                </svg>
+                                <span>{{ student.email }}</span>
+                            </div>
+                            <div class="detail-row">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                                    <line x1="16" y1="2" x2="16" y2="6"></line>
+                                    <line x1="8" y1="2" x2="8" y2="6"></line>
+                                    <line x1="3" y1="10" x2="21" y2="10"></line>
+                                </svg>
+                                <span>Token: {{ student.access_token }}</span>
+                            </div>
+                            <div class="detail-row">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                                    <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                                </svg>
+                                <span>Counselor: {{ student.counselor_name if student.counselor_name else 'Not assigned' }}</span>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                    {% else %}
+                    <div class="empty-state">
+                        <p>No students registered yet</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </section>
+
+            <!-- MESSAGES TAB -->
+            <section id="messages-tab" class="tab-content">
+                <div class="content-header">
+                    <h1>All Messages</h1>
+                    <p class="content-subtitle">View all chat messages</p>
+                </div>
+
+                <div class="info-banner">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <line x1="12" y1="16" x2="12" y2="12"></line>
+                        <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                    </svg>
+                    <span>For detailed message viewing, click "View All Messages" in Quick Actions</span>
+                    <a href="{{ url_for('IMHSS.admin_view_all_messages') }}" class="btn-view">View</a>
+                </div>
+
+                <div class="empty-state-large">
+                    <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                    </svg>
+                    <h3>Message Monitoring</h3>
+                    <p>Click "View All Messages" to see detailed chat history</p>
+                    <a href="{{ url_for('IMHSS.admin_view_all_messages') }}" class="btn-register">View All Messages</a>
+                </div>
+            </section>
+
+            <!-- FLAGGED TAB -->
+            <section id="flagged-tab" class="tab-content">
+                <div class="content-header">
+                    <h1>Flagged Messages</h1>
+                    <p class="content-subtitle">High-risk messages requiring attention</p>
+                </div>
+
+                <div class="info-banner">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <line x1="12" y1="16" x2="12" y2="12"></line>
+                        <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                    </svg>
+                    <span>For detailed flag viewing, click "View Flagged Messages" in Quick Actions</span>
+                    <a href="{{ url_for('IMHSS.admin_view_all_flags') }}" class="btn-view">View</a>
+                </div>
+
+                <div class="empty-state-large">
+                    <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+                        <line x1="12" y1="9" x2="12" y2="13"></line>
+                        <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                    </svg>
+                    <h3>Flag Monitoring</h3>
+                    <p>Click "View Flagged Messages" to see all high-risk alerts</p>
+                    <a href="{{ url_for('IMHSS.admin_view_all_flags') }}" class="btn-register">View Flagged Messages</a>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script src="/static/js/dashboard.js"></script>
+</body>
+</html>

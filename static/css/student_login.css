@@ -1,0 +1,333 @@
+/* =========================================================
+   Student Login Page Styles
+   ========================================================= */
+
+/* CSS Reset */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+/* Page Background */
+body {
+    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    background: #f5f7fa;
+    min-height: 100vh;
+}
+
+/* Layout Container */
+.student-login-container {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    position: relative;
+}
+
+/* Wrapper */
+.student-login-wrapper {
+    width: 100%;
+    max-width: 500px;
+}
+
+/* Header */
+.student-login-header {
+    text-align: center;
+    margin-bottom: 40px;
+}
+
+.student-logo {
+    width: 90px;
+    height: 90px;
+    background: rgba(90, 138, 156, 0.12);
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 20px;
+}
+
+.student-logo svg {
+    color: #5a8a9c;
+}
+
+.student-login-title {
+    font-size: 36px;
+    font-weight: 700;
+    color: #2d3748;
+    margin-bottom: 8px;
+}
+
+.student-login-subtitle {
+    font-size: 18px;
+    color: #718096;
+}
+
+/* Login Card */
+.student-login-card {
+    background: #ffffff;
+    border-radius: 16px;
+    padding: 40px;
+    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.08);
+    margin-bottom: 24px;
+}
+
+.student-access-title {
+    font-size: 28px;
+    font-weight: 600;
+    color: #2d3748;
+    text-align: center;
+    margin-bottom: 10px;
+}
+
+.student-access-subtitle {
+    font-size: 16px;
+    color: #718096;
+    text-align: center;
+    margin-bottom: 32px;
+}
+
+/* Form */
+.student-login-form {
+    width: 100%;
+}
+
+.student-form-group {
+    margin-bottom: 24px;
+}
+
+.student-label {
+    display: block;
+    font-size: 16px;
+    font-weight: 500;
+    color: #2d3748;
+    margin-bottom: 10px;
+}
+
+/* Input */
+.student-input-wrapper {
+    position: relative;
+}
+
+.input-icon {
+    position: absolute;
+    top: 50%;
+    left: 16px;
+    transform: translateY(-50%);
+    color: #a0aec0;
+    pointer-events: none;
+}
+
+.student-token-input {
+    width: 100%;
+    padding: 14px 16px 14px 48px;
+    font-size: 16px;
+    border: 2px solid #e2e8f0;
+    border-radius: 10px;
+    background: #f7fafc;
+    letter-spacing: 2px;
+    transition: all 0.3s;
+}
+
+.student-token-input::placeholder {
+    color: #cbd5e0;
+    letter-spacing: 2px;
+}
+
+.student-token-input:focus {
+    outline: none;
+    background: #ffffff;
+    border-color: #5a8a9c;
+    box-shadow: 0 0 0 0.25rem rgba(90, 138, 156, 0.25);
+}
+
+/* Help Text */
+.student-help-text {
+    display: block;
+    margin-top: 8px;
+    font-size: 14px;
+    color: #718096;
+}
+
+/* Submit Button */
+.student-submit-btn {
+    width: 100%;
+    padding: 16px;
+    font-size: 16px;
+    font-weight: 600;
+    color: #ffffff;
+    background: #5a8a9c;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.student-submit-btn:hover {
+    background: #4a7a8c;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 14px rgba(90, 138, 156, 0.35);
+}
+
+.student-submit-btn:active {
+    transform: translateY(0);
+}
+
+.student-submit-btn:disabled {
+    background: #a0aec0;
+    cursor: not-allowed;
+    box-shadow: none;
+}
+
+/* Footer */
+.student-login-footer {
+    text-align: center;
+    background: #ffffff;
+    padding: 18px;
+    border-radius: 10px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
+}
+
+.student-login-footer p {
+    font-size: 14px;
+    color: #718096;
+    margin: 0;
+}
+
+/* =========================================================
+    Alert Notifications - Slide from Right
+   ========================================================= */
+
+   /* Alert Styles - Slide from Right */
+.alert {
+    position: fixed;
+    top: 20px;
+    right: -400px;
+    max-width: 400px;
+    width: 90%;
+    padding: 15px 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    z-index: 1000;
+    animation: slideInRight 0.5s forwards, slideOutRight 0.5s 3s forwards;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+.alert-success {
+    background: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+}
+
+.alert-error {
+    background: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+}
+.alert-warning {
+    background: #fff3cd;
+    color: #856404;
+    border: 1px solid #ffeaa7;
+}
+
+/* Alert Icon */
+.alert::before {
+    content: "✓";
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.1);
+    font-weight: bold;
+    flex-shrink: 0;
+}
+
+.alert-error::before {
+    content: "✕";
+}
+
+.alert-danger::before {
+    content: "⚠";
+}
+
+   /* Slide Animations */
+@keyframes slideInRight {
+    from {
+        right: -400px;
+        opacity: 0;
+    }
+
+    to {
+        right: 20px;
+        opacity: 1;
+    }
+}
+
+@keyframes slideOutRight {
+    from {
+        right: 20px;
+        opacity: 1;
+    }
+
+    to {
+        right: -400px;
+        opacity: 0;
+    }
+}
+
+/* =========================================================
+    Responsive Adjustments
+   ========================================================= */
+
+@media (max-width: 768px) {
+    .student-login-title {
+        font-size: 28px;
+    }
+
+    .student-access-title {
+        font-size: 24px;
+    }
+
+    .toast {
+        max-width: 90%;
+    }
+}
+
+@media (max-width: 480px) {
+    .student-login-card {
+        padding: 28px 18px;
+    }
+
+    .student-login-title {
+        font-size: 26px;
+    }
+
+    .student-access-title {
+        font-size: 22px;
+    }
+
+    .student-token-input {
+        font-size: 14px;
+        padding: 12px 12px 12px 44px;
+    }
+
+    .student-submit-btn {
+        padding: 14px;
+        font-size: 15px;
+    }
+
+    .student-logo {
+        width: 70px;
+        height: 70px;
+    }
+
+    .student-logo svg {
+        width: 40px;
+        height: 40px;
+    }
+}

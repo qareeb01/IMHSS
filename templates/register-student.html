@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+    <title>Register Student - IMHSS</title>
+    <link
+        rel="stylesheet"
+        href="/static/css/registration-form.css"
+    >
+</head>
+
+<body>
+    <!-- HEADER -->
+    <header class="form-header">
+        <div class="header-content">
+            <div class="header-left">
+                <h1>IMHSS</h1>
+                <p class="page-subtitle">Student Registration</p>
+            </div>
+            <div class="header-right">
+                <span class="user-name">{{ session.get('name') }}</span>
+                <a href="{{ url_for('IMHSS.counselor_dashboard') }}" class="btn-back">← Back to Dashboard</a>
+            </div>
+        </div>
+    </header>
+
+    <!-- FLASH MESSAGES -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }}">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <!-- MAIN CONTAINER -->
+    <div class="form-container">
+        <div class="form-wrapper">
+
+           
+            <!-- REGISTRATION FORM -->
+            <div class="card">
+                <div class="card-header">
+                    <h2>Register New Student</h2>
+                    <p>Fill in the student's information below. A unique access
+                        token will be automatically generated.</p>
+                </div>
+
+                <form
+                    method="POST"
+                    action="{{ url_for('IMHSS.counselor_create_student') }}"
+                    class="registration-form"
+                >
+
+                    <!-- PERSONAL INFORMATION -->
+                    <div class="form-section">
+                        <h3 class="section-title">Personal Information</h3>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="student_name">
+                                    Full Name <span class="required">*</span>
+                                </label>
+                                <input
+                                    type="text"
+                                    id="student_name"
+                                    name="name"
+                                    placeholder="e.g., John Doe"
+                                    required
+                                >
+                            </div>
+
+                            <div class="form-group">
+                                <label for="student_email">
+                                    Email Address <span
+                                        class="required">*</span>
+                                </label>
+                                <input
+                                    type="email"
+                                    id="student_email"
+                                    name="email"
+                                    placeholder="e.g., john.doe@university.edu"
+                                    required
+                                >
+                            </div>
+                        
+                            <div class="form-group">
+                                <label for="parent_name">
+                                    parent/guardian <span
+                                        class="required">*</span>
+                                </label>
+                                <input
+                                    type="text"
+                                    id="parent_name"
+                                    name="parent_name"
+                                    placeholder="e.g., Mrs Jane Doe"
+                                    required
+                                >
+                            </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="student_phone">
+                                    Contact Number <span class="required">*</span>
+                                </label>
+                                <input
+                                    type="tel"
+                                    id="student_phone"
+                                    name="phone"
+                                    placeholder="e.g., 0801 xxx xxxx"
+                                    required
+                                >
+                            </div>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="parent_contact">
+                                    parent/guardian Number <span class="required">*</span>
+                                </label>
+                                <input
+                                    type="tel"
+                                    id="parent_contact"
+                                    name="parent_contact"
+                                    placeholder="e.g., 0801 xxx xxxx"
+                                    required
+                                >
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="gender">gender<span class="required">*</span></label>
+                                
+                                <select
+                                    name="gender"
+                                    id="gender" required>
+                                    <option value="">Select Gender</option>
+                                    <option value="male">Male</option>
+                                    <option value="female">Female</option>
+                                </select>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <!-- ACADEMIC INFORMATION -->
+                    <div class="form-section">
+                        <h3 class="section-title">Academic Information</h3>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="student_dept">
+                                    Department <span class="required">*</span>
+                                </label>
+                                <input
+                                    type="text"
+                                    id="student_dept"
+                                    name="department"
+                                    placeholder="e.g., Computer Science"
+                                    required
+                                >
+                            </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="hall">Hall<span class="required">*</span></label>
+                                    
+                                <select
+                                    name="hall"
+                                    id="hall" required>
+                                    <option value="Select Hall"></option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="student_matricnumber">
+                                    Matric Number <span
+                                        class="required">*</span>
+                                </label>
+                                <input
+                                    inputmode="numeric"
+                                    id="student_matricnumber"
+                                    name="matric"
+                                    minlength="5"
+                                    maxlength="10"
+                                    placeholder="e.g., 22/0333"
+                                    required
+                                >
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="Room_number">
+                                    Room Number <span
+                                        class="required">*</span>
+                                </label>
+                                <input
+                                    inputmode="text"
+                                    id="Room_number"
+                                    name="room_number"
+                                    placeholder="e.g., A12"
+                                    required
+                                >
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- INFORMATION BOX -->
+                    <div class="info-box">
+                        <div class="info-icon">ℹ️</div>
+                        <div class="info-content">
+                            <h4>Important Information</h4>
+                            <ul>
+                                <li>A unique access token will be generated
+                                    automatically</li>
+                                <li>The student will be assigned to you
+                                    (counselor)</li>
+                                <li>Share the token securely with the student
+                                </li>
+                                <li>The token is for one-time use only</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- FORM ACTIONS -->
+                    <div class="form-actions">
+                        <button
+                            type="submit"
+                            class="btn-primary"
+                        >
+                            <span class="btn-icon">✓</span>
+                            Register Student
+                        </button>
+                        <a href="{{ url_for('IMHSS.counselor_dashboard') }}" class="btn-secondary">Cancel</a>
+                    </div>
+                </form>
+            </div>
+
+
+
+        </div>
+    </div>
+
+    <script src="/static/js/registration-form.js"></script>
+</body>
+
+</html>

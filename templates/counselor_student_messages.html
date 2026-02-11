@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+    <title>Student Messages - {{ student.name }}</title>
+    <link
+        rel="stylesheet"
+        href="/static/css/Dashboard.css"
+    >
+</head>
+
+<body>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    {% for category, message in messages %}
+    <div class="alert alert-{{ category }}">{{ message }}</div>
+    {% endfor %}
+    {% endif %}
+    {% endwith %}
+
+    <div class="messages-page">
+        <div class="messages-header">
+            <a
+                href="{{ url_for('IMHSS.counselor_dashboard') }}"
+                class="back-btn"
+            >
+                <svg
+                    width="20"
+                    height="20"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                >
+                    <line
+                        x1="19"
+                        y1="12"
+                        x2="5"
+                        y2="12"
+                    ></line>
+                    <polyline points="12 19 5 12 12 5"></polyline>
+                </svg>
+                Back to Dashboard
+            </a>
+            <div class="student-header-info">
+                <div class="student-avatar-large">{{ student.name[0].upper() }}
+                </div>
+                <div>
+                    <h1>{{ student.name }}</h1>
+                    <p>{{ student.matric }} • {{ student.department }}</p>
+                </div>
+            </div>
+            {% if flagged_count > 0 %}
+            <div class="flagged-alert">
+                <svg
+                    width="20"
+                    height="20"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                >
+                    <path
+                        d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"
+                    ></path>
+                    <line
+                        x1="12"
+                        y1="9"
+                        x2="12"
+                        y2="13"
+                    ></line>
+                    <line
+                        x1="12"
+                        y1="17"
+                        x2="12.01"
+                        y2="17"
+                    ></line>
+                </svg>
+                {{ flagged_count }} High-Risk Message(s)
+            </div>
+            {% endif %}
+        </div>
+
+        <div class="messages-container">
+            {% if messages %}
+            <div class="messages-timeline">
+                {% for msg in messages %}
+                <div
+                    class="message-block {% if msg.flagged %}flagged{% endif %}">
+                    <div class="message-timestamp">
+                        {{ msg.timestamp.strftime('%B %d, %Y at %I:%M %p') if
+                        msg.timestamp else 'Unknown time' }}
+                    </div>
+
+                    {% if msg.flagged %}
+                    <div class="risk-warning">
+                        <svg
+                            width="16"
+                            height="16"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2"
+                        >
+                            <path
+                                d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"
+                            ></path>
+                        </svg>
+                        High Risk - {{ msg.risk_level }}
+                    </div>
+                    {% endif %}
+
+                    <div class="message-student">
+                        <div class="message-label">Student:</div>
+                        <div class="message-bubble student-bubble">
+                            {{ msg.content }}
+                        </div>
+                    </div>
+
+                    <div class="message-ai">
+                        <div class="message-label">AI Response:</div>
+                        <div class="message-bubble ai-bubble">
+                            {{ msg.ai_response }}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="empty-state-large">
+                <svg
+                    width="64"
+                    height="64"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                >
+                    <path
+                        d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"
+                    ></path>
+                </svg>
+                <h3>No Messages Yet</h3>
+                <p>This student hasn't sent any messages.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</body>
+
+</html>
