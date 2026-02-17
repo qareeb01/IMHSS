@@ -1,40 +1,32 @@
-# User/models.py - Optimized User Models with Token Expiration
+# User/models.py - User Models with Token Expiration and Password Reset
 import secrets
 import string
-from flask import jsonify, request
-from werkzeug.security import generate_password_hash
 import datetime
 import uuid
-from .database import users, students
+from flask import jsonify, request
+from werkzeug.security import generate_password_hash as gph
+from .database import users, students, password_reset_tokens, logs
 
 
 class User:
 
     @staticmethod
     def counselor_signup():
-        """
-        Register a new counselor
-        Returns: JSON response with status
-        """
+        """Register a new counselor. Returns JSON response with status."""
         try:
-            # Extract form inputs
             name = request.form.get('name')
             email = request.form.get('email')
             password = request.form.get('password')
             department = request.form.get('department')
 
-            # Validation
             if not all([name, email, password, department]):
                 return jsonify({"error": "All fields are required"}), 400
 
-            # Check if email already exists
             if users.find_one({"email": email}):
                 return jsonify({"error": "Email already exists"}), 400
 
-            # Hash the password
-            hashed_password = generate_password_hash(password, method="pbkdf2")
+            hashed_password = gph(password, method="pbkdf2")
 
-            # Insert counselor into database
             counselor_data = {
                 "_id": uuid.uuid4().hex,
                 "name": name,
@@ -55,12 +47,8 @@ class User:
 
     @staticmethod
     def student_signup():
-        """
-        Register a new student with 7-day token expiration
-        Returns: JSON response with access token
-        """
+        """Register a new student with 7-day token expiration."""
         try:
-            # Extract form inputs
             name = request.form.get('name')
             email = request.form.get('email')
             parent_name = request.form.get('parent_name')
@@ -72,24 +60,19 @@ class User:
             matric = request.form.get('matric')
             room_number = request.form.get('room_number')
 
-            # Validation
             if not all([name, email, parent_name, parent_contact, hostel_hall,
                         phone, department, matric, room_number]):
                 return jsonify({"error": "All fields are required"}), 400
 
-            # Check if email already exists
             if students.find_one({"email": email}):
                 return jsonify({"error": "Email already exists"}), 400
 
-            # Generate a unique access token
             alphabet = string.ascii_uppercase + string.digits
             access_token = ''.join(secrets.choice(alphabet) for _ in range(8))
 
-            # Calculate token expiration (7 days from now)
             token_created_at = datetime.datetime.utcnow()
             token_expires_at = token_created_at + datetime.timedelta(days=7)
 
-            # Store student details in the database
             student_data = {
                 "_id": uuid.uuid4().hex,
                 "name": name,
@@ -122,16 +105,10 @@ class User:
 
     @staticmethod
     def counselor_admin_login():
-        """
-        Authenticate counselor or admin
-        Returns: User record if valid, None otherwise
-        """
+        """Authenticate counselor or admin. Returns user record or None."""
         try:
-            # Extract form inputs
             email = request.form.get('email')
             password = request.form.get('password')
-
-            # Find user by email (use index for faster query)
             user_record = users.find_one({'email': email})
 
             if not user_record:
@@ -145,27 +122,21 @@ class User:
 
     @staticmethod
     def student_login():
-        """
-        Authenticate student using token (with expiration check)
-        Returns: Student record if valid and not expired, None otherwise
-        """
+        """Authenticate student using token with expiration check."""
         try:
             token = request.form.get('token')
 
             if not token:
                 return None
 
-            # Find student by access token (use index for faster query)
             student_record = students.find_one({"access_token": token})
 
             if not student_record:
                 return None
 
-            # Check if token has expired
             token_expires_at = student_record.get('token_expires_at')
             current_time = datetime.datetime.utcnow()
             if token_expires_at and current_time > token_expires_at:
-                # Token has expired
                 return {"expired": True, "student": student_record}
 
             return student_record
@@ -176,21 +147,14 @@ class User:
 
     @staticmethod
     def regenerate_student_token(student_id):
-        """
-        Generate a new access token for a student (7-day expiration)
-        Used by counselors to renew expired tokens
-        Returns: New token or None
-        """
+        """Generate a new access token for a student (7-day expiration)."""
         try:
-            # Generate new token
             alphabet = string.ascii_uppercase + string.digits
             new_token = ''.join(secrets.choice(alphabet) for _ in range(8))
 
-            # Calculate new expiration
             token_created_at = datetime.datetime.utcnow()
             token_expires_at = token_created_at + datetime.timedelta(days=7)
 
-            # Update student record
             result = students.update_one(
                 {"_id": student_id},
                 {
@@ -214,3 +178,169 @@ class User:
         except Exception as e:
             print(f"Token regeneration error: {e}")
             return None
+
+    # ------------------------------------------------------------------
+    # PASSWORD RESET
+    # ------------------------------------------------------------------
+
+    @staticmethod
+    def create_password_reset_token(email: str):
+        """
+        Initiate a password reset for a counselor or admin.
+
+        - Looks up the user by email.
+        - Invalidates any previous unused tokens for that email so only
+          the newest link works (prevents token accumulation).
+        - Generates a cryptographically secure URL-safe token valid for
+          1 hour and stores it in password_reset_tokens.
+
+        Args:
+            email: The email address submitted on the forgot-password form.
+
+        Returns:
+            dict with keys 'token', 'user_name', 'user_email' if the email
+            matches a known user — or None if no match (caller should NOT
+            reveal this to the form to prevent email enumeration).
+        """
+        try:
+            user = users.find_one(
+                {'email': email},
+                {'_id': 1, 'name': 1, 'email': 1, 'role': 1, 'status': 1}
+            )
+
+            if not user:
+                return None   # silently return — caller shows generic message
+
+            if user.get('status') == 'blocked':
+                return None   # blocked accounts cannot reset password
+
+            # Invalidate any existing unused tokens for this email
+            password_reset_tokens.update_many(
+                {'email': email, 'used': False},
+                {'$set': {'used': True}}
+            )
+
+            # Generate a 48-byte URL-safe token (64 chars after base64)
+            raw_token = secrets.token_urlsafe(48)
+            now = datetime.datetime.utcnow()
+
+            token_doc = {
+                "_id": uuid.uuid4().hex,
+                "user_id": str(user['_id']),
+                "email": email,
+                "token": raw_token,
+                "created_at": now,
+                "expires_at": now + datetime.timedelta(hours=1),
+                "used": False
+            }
+
+            password_reset_tokens.insert_one(token_doc)
+
+            return {
+                "token": raw_token,
+                "user_name": user.get('name', 'User'),
+                "user_email": email
+            }
+
+        except Exception as e:
+            print(f"create_password_reset_token error: {e}")
+            return None
+
+    @staticmethod
+    def verify_reset_token(token: str):
+        """
+        Verify that a password reset token is valid and not expired.
+
+        Does NOT consume the token — call reset_password_with_token()
+        for that. This is used by the GET handler to pre-validate before
+        rendering the reset form.
+
+        Returns:
+            token document (dict) if valid, None otherwise.
+        """
+        try:
+            now = datetime.datetime.utcnow()
+            token_doc = password_reset_tokens.find_one({
+                'token': token,
+                'used': False,
+                'expires_at': {'$gt': now}
+            })
+            return token_doc
+
+        except Exception as e:
+            print(f"verify_reset_token error: {e}")
+            return None
+
+    @staticmethod
+    def reset_password_with_token(token: str, new_password: str):
+        """
+        Consume a reset token and update the user's password.
+
+        Steps:
+          1. Find a valid (unused, unexpired) token document.
+          2. Find the corresponding user.
+          3. Hash and set the new password.
+          4. Mark the token as used so it cannot be replayed.
+          5. Log the password-reset event in activity_logs.
+
+        Args:
+            token:        The raw token string from the URL.
+            new_password: The plaintext new password from the form.
+
+        Returns:
+            True on success, False on any failure.
+        """
+        try:
+
+            now = datetime.datetime.utcnow()
+
+            # 1. Find valid token
+            token_doc = password_reset_tokens.find_one({
+                'token': token,
+                'used': False,
+                'expires_at': {'$gt': now}
+            })
+
+            if not token_doc:
+                return False
+
+            user_id = token_doc['user_id']
+
+            # 2. Find user
+            user = users.find_one({'_id': user_id})
+            if not user:
+                return False
+
+            # 3. Hash new password and update
+            new_hash = gph(new_password, method='pbkdf2')
+            result = users.update_one(
+                {'_id': user_id},
+                {'$set': {
+                    'hashed_password': new_hash,
+                    'password_updated_at': now
+                }}
+            )
+
+            if result.modified_count == 0:
+                return False
+
+            # 4. Mark token consumed
+            password_reset_tokens.update_one(
+                {'_id': token_doc['_id']},
+                {'$set': {'used': True, 'used_at': now}}
+            )
+
+            # 5. Audit log
+            logs.insert_one({
+                '_id': uuid.uuid4().hex,
+                'user_id': user_id,
+                'action': 'password_reset_via_email',
+                'email': token_doc['email'],
+                'timestamp': now
+            })
+
+            return True
+
+        except Exception as e:
+            print(f"reset_password_with_token error: {e}")
+            return False

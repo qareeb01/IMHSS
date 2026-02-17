@@ -118,11 +118,13 @@ body {
     transform: translateY(-50%);
     color: #a0aec0;
     pointer-events: none;
+    z-index: 1;
 }
 
 .student-token-input {
     width: 100%;
-    padding: 14px 16px 14px 48px;
+    padding: 14px 48px 14px 48px;
+    /* Space for both icon and toggle */
     font-size: 16px;
     border: 2px solid #e2e8f0;
     border-radius: 10px;
@@ -143,12 +145,69 @@ body {
     box-shadow: 0 0 0 0.25rem rgba(90, 138, 156, 0.25);
 }
 
+/* Token Toggle Button */
+.token-toggle {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    padding: 6px;
+    cursor: pointer;
+    color: #a0aec0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+    transition: all 0.3s;
+    z-index: 2;
+}
+
+.token-toggle:hover {
+    background: rgba(90, 138, 156, 0.1);
+    color: #5a8a9c;
+}
+
+.token-toggle:active {
+    transform: translateY(-50%) scale(0.95);
+}
+
+.token-toggle svg {
+    display: block;
+}
+
 /* Help Text */
 .student-help-text {
     display: block;
     margin-top: 8px;
     font-size: 14px;
     color: #718096;
+}
+
+/* Lost Token Help Box */
+.student-help-box {
+    margin-top: 24px;
+    padding: 16px;
+    background: #f0f9ff;
+    border-left: 4px solid #5a8a9c;
+    border-radius: 8px;
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+}
+
+.student-help-box svg {
+    color: #5a8a9c;
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+.student-help-box p {
+    margin: 0;
+    font-size: 14px;
+    color: #4a5568;
+    line-height: 1.5;
 }
 
 /* Submit Button */
@@ -200,7 +259,7 @@ body {
     Alert Notifications - Slide from Right
    ========================================================= */
 
-   /* Alert Styles - Slide from Right */
+/* Alert Styles - Slide from Right */
 .alert {
     position: fixed;
     top: 20px;
@@ -216,6 +275,7 @@ body {
     align-items: center;
     gap: 12px;
 }
+
 .alert-success {
     background: #d4edda;
     color: #155724;
@@ -227,6 +287,7 @@ body {
     color: #721c24;
     border: 1px solid #f5c6cb;
 }
+
 .alert-warning {
     background: #fff3cd;
     color: #856404;
@@ -255,7 +316,7 @@ body {
     content: "⚠";
 }
 
-   /* Slide Animations */
+/* Slide Animations */
 @keyframes slideInRight {
     from {
         right: -400px;

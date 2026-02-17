@@ -53,3 +53,4 @@ backup_*/
 .pytest_cache/
 .coverage
 htmlcov/
+.env

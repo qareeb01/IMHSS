@@ -2,6 +2,9 @@
 
 document.addEventListener('DOMContentLoaded', function() {
     
+    // ========== MOBILE MENU SETUP (EXACTLY LIKE STUDENT DASHBOARD) ==========
+    initializeMobileMenu();
+    
     // ========== SIDEBAR NAVIGATION ==========
     const sidebarLinks = document.querySelectorAll('.sidebar-link');
     const tabContents = document.querySelectorAll('.tab-content');
@@ -27,6 +30,48 @@ document.addEventListener('DOMContentLoaded', function() {
             if (targetElement) {
                 targetElement.classList.add('active');
             }
+            
+            // Close mobile menu after navigation
+            closeMobileMenu();
+        });
+    });
+    
+    // ========== QUICK ACTION BUTTONS WITH TAB SWITCHING ==========
+    const actionButtons = document.querySelectorAll('.action-btn[data-tab]');
+    
+    actionButtons.forEach(button => {
+        button.addEventListener('click', function(e) {
+            // Only handle if it has data-tab (tab switching, not external links)
+            const targetTab = this.getAttribute('data-tab');
+            
+            if (targetTab) {
+                e.preventDefault();
+                
+                // Remove active class from all sidebar links
+                sidebarLinks.forEach(l => l.classList.remove('active'));
+                
+                // Add active class to corresponding sidebar link
+                const correspondingSidebarLink = document.querySelector(`.sidebar-link[data-tab="${targetTab}"]`);
+                if (correspondingSidebarLink) {
+                    correspondingSidebarLink.classList.add('active');
+                }
+                
+                // Hide all tabs
+                tabContents.forEach(tab => tab.classList.remove('active'));
+                
+                // Show target tab
+                const targetElement = document.getElementById(`${targetTab}-tab`);
+                if (targetElement) {
+                    targetElement.classList.add('active');
+                }
+                
+                // Close mobile menu after navigation
+                closeMobileMenu();
+                
+                // Scroll to top
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+            // If no data-tab, let the link navigate normally (like "Register Student")
         });
     });
     
@@ -65,6 +110,92 @@ document.addEventListener('DOMContentLoaded', function() {
     }, 4000);
     
 });
+
+// ========================================
+// MOBILE MENU FUNCTIONALITY (SAME AS STUDENT DASHBOARD)
+// ========================================
+function initializeMobileMenu() {
+    // Create mobile menu toggle button if it doesn't exist
+    if (!document.querySelector('.mobile-menu-toggle')) {
+        const toggleBtn = document.createElement('button');
+        toggleBtn.className = 'mobile-menu-toggle';
+        toggleBtn.setAttribute('aria-label', 'Toggle menu');
+        toggleBtn.innerHTML = `
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="3" y1="12" x2="21" y2="12"></line>
+                <line x1="3" y1="6" x2="21" y2="6"></line>
+                <line x1="3" y1="18" x2="21" y2="18"></line>
+            </svg>
+        `;
+        document.body.appendChild(toggleBtn);
+        
+        toggleBtn.addEventListener('click', toggleMobileMenu);
+    }
+    
+    // Create overlay if it doesn't exist
+    if (!document.querySelector('.sidebar-overlay')) {
+        const overlay = document.createElement('div');
+        overlay.className = 'sidebar-overlay';
+        document.body.appendChild(overlay);
+        
+        overlay.addEventListener('click', closeMobileMenu);
+    }
+    
+    // Add close button to sidebar
+    const sidebar = document.querySelector('.sidebar-left');
+    if (sidebar && !sidebar.querySelector('.mobile-close-btn')) {
+        const closeBtn = document.createElement('button');
+        closeBtn.className = 'mobile-close-btn';
+        closeBtn.setAttribute('aria-label', 'Close menu');
+        closeBtn.innerHTML = `
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+        `;
+        sidebar.appendChild(closeBtn);
+        
+        closeBtn.addEventListener('click', closeMobileMenu);
+    }
+}
+
+function toggleMobileMenu() {
+    const sidebar = document.querySelector('.sidebar-left');
+    const overlay = document.querySelector('.sidebar-overlay');
+    
+    if (sidebar && overlay) {
+        const isActive = sidebar.classList.contains('active');
+        
+        if (isActive) {
+            closeMobileMenu();
+        } else {
+            openMobileMenu();
+        }
+    }
+}
+
+function openMobileMenu() {
+    const sidebar = document.querySelector('.sidebar-left');
+    const overlay = document.querySelector('.sidebar-overlay');
+    
+    if (sidebar && overlay) {
+        sidebar.classList.add('active');
+        overlay.classList.add('active');
+        document.body.style.overflow = 'hidden';
+    }
+}
+
+function closeMobileMenu() {
+    const sidebar = document.querySelector('.sidebar-left');
+    const overlay = document.querySelector('.sidebar-overlay');
+    
+    if (sidebar && overlay) {
+        sidebar.classList.remove('active');
+        overlay.classList.remove('active');
+        document.body.style.overflow = '';
+    }
+}
+
 // ========================================
 // MODERN REAL-TIME NOTIFICATION SYSTEM
 // ========================================
@@ -391,3 +522,134 @@ function showPermissionModal(title, message, success) {
         modal.remove();
     }, 3000);
 }
+
+// ========================================
+// PASSWORD CHANGE - STRENGTH & VALIDATION
+// ========================================
+(function initPasswordChangeValidation() {
+    const newPasswordInput = document.getElementById('new_password');
+    const confirmPasswordInput = document.getElementById('confirm_password');
+    const strengthIndicator = document.getElementById('password-strength');
+    const matchMessage = document.getElementById('password-match-message');
+    const submitBtn = document.getElementById('change-password-btn');
+
+    // Only run if password change elements exist
+    if (!newPasswordInput || !confirmPasswordInput) return;
+
+    // Password strength checker
+    if (newPasswordInput && strengthIndicator) {
+        newPasswordInput.addEventListener('input', function() {
+            const password = this.value;
+            const strength = checkPasswordStrength(password);
+            
+            strengthIndicator.innerHTML = `
+                <div style="display: flex; gap: 4px; margin-bottom: 4px;">
+                    <div style="flex: 1; height: 4px; background: ${strength.level >= 1 ? strength.color : '#e2e8f0'}; border-radius: 2px;"></div>
+                    <div style="flex: 1; height: 4px; background: ${strength.level >= 2 ? strength.color : '#e2e8f0'}; border-radius: 2px;"></div>
+                    <div style="flex: 1; height: 4px; background: ${strength.level >= 3 ? strength.color : '#e2e8f0'}; border-radius: 2px;"></div>
+                    <div style="flex: 1; height: 4px; background: ${strength.level >= 4 ? strength.color : '#e2e8f0'}; border-radius: 2px;"></div>
+                </div>
+                <p style="margin: 0; font-size: 0.75rem; color: ${strength.color}; font-weight: 500;">
+                    ${strength.text}
+                </p>
+            `;
+            
+            checkPasswordMatch();
+        });
+    }
+
+    // Password match checker
+    if (confirmPasswordInput && matchMessage) {
+        confirmPasswordInput.addEventListener('input', checkPasswordMatch);
+        newPasswordInput.addEventListener('input', checkPasswordMatch);
+    }
+
+    function checkPasswordMatch() {
+        const newPassword = newPasswordInput.value;
+        const confirmPassword = confirmPasswordInput.value;
+        
+        if (confirmPassword === '') {
+            matchMessage.textContent = '';
+            matchMessage.style.color = '';
+            return;
+        }
+        
+        if (newPassword === confirmPassword) {
+            matchMessage.textContent = '✓ Passwords match';
+            matchMessage.style.color = '#48bb78';
+            if (submitBtn) submitBtn.disabled = false;
+        } else {
+            matchMessage.textContent = '✗ Passwords do not match';
+            matchMessage.style.color = '#f56565';
+            if (submitBtn) submitBtn.disabled = true;
+        }
+    }
+
+    function checkPasswordStrength(password) {
+        let strength = 0;
+        let text = 'Too weak';
+        let color = '#f56565';
+        
+        if (password.length >= 8) strength++;
+        if (password.length >= 12) strength++;
+        if (/[a-z]/.test(password) && /[A-Z]/.test(password)) strength++;
+        if (/\d/.test(password)) strength++;
+        if (/[^a-zA-Z\d]/.test(password)) strength++;
+        
+        if (strength <= 1) {
+            text = 'Weak password';
+            color = '#f56565';
+        } else if (strength === 2) {
+            text = 'Fair password';
+            color = '#ed8936';
+        } else if (strength === 3) {
+            text = 'Good password';
+            color = '#ecc94b';
+        } else if (strength >= 4) {
+            text = 'Strong password';
+            color = '#48bb78';
+        }
+        
+        return { level: strength, text: text, color: color };
+    }
+
+    // Form validation
+    const passwordForm = document.getElementById('password-change-form');
+    if (passwordForm) {
+        passwordForm.addEventListener('submit', function(e) {
+            const newPassword = newPasswordInput.value;
+            const confirmPassword = confirmPasswordInput.value;
+            
+            if (newPassword !== confirmPassword) {
+                e.preventDefault();
+                alert('Passwords do not match. Please check and try again.');
+                return false;
+            }
+            
+            if (newPassword.length < 8) {
+                e.preventDefault();
+                alert('Password must be at least 8 characters long.');
+                return false;
+            }
+        });
+    }
+})();
+
+// ========================================
+// CHARACTER COUNTER - MESSAGE BODY
+// ========================================
+(function initCharacterCounter() {
+    const bodyEl = document.getElementById('body');
+    const countEl = document.getElementById('bodyCount');
+    
+    if (!bodyEl || !countEl) return;
+    
+    function updateCounter() {
+        const length = bodyEl.value.length;
+        countEl.textContent = length;
+        countEl.style.color = length > 3800 ? '#c53030' : '#718096';
+    }
+    
+    bodyEl.addEventListener('input', updateCounter);
+    updateCounter();
+})();

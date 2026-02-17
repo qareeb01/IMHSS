@@ -7,7 +7,7 @@
         name="viewport"
         content="width=device-width, initial-scale=1.0"
     >
-    <title>Student Login - IMHSS</title>
+    <title>Student Login - IMHMS</title>
     <link
         rel="stylesheet"
         href="/static/css/student_login.css"
@@ -40,8 +40,8 @@
                         ></path>
                     </svg>
                 </div>
-                <h1 class="student-login-title">IMHSS</h1>
-                <p class="student-login-subtitle">Student Mental Health Support
+                <h1 class="student-login-title">IMHMS</h1>
+                <p class="student-login-subtitle">Student Mental Health Monitoring System
                 </p>
             </div>
 
@@ -79,13 +79,62 @@
                                 <path d="M21 2l-9.6 9.6"></path>
                             </svg>
                             <input
-                                type="text"
+                                type="password"
                                 id="token"
                                 name="token"
                                 placeholder="XXXXXXXX"
                                 class="student-token-input"
                                 required
+                                autocomplete="off"
                             >
+                            <!-- Show/Hide Token Toggle -->
+                            <button
+                                type="button"
+                                class="token-toggle"
+                                id="toggleToken"
+                                aria-label="Toggle token visibility"
+                            >
+                                <!-- Eye Icon (Show) -->
+                                <svg
+                                    class="eye-icon"
+                                    width="18"
+                                    height="18"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    stroke-width="2"
+                                >
+                                    <path
+                                        d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"
+                                    ></path>
+                                    <circle
+                                        cx="12"
+                                        cy="12"
+                                        r="3"
+                                    ></circle>
+                                </svg>
+                                <!-- Eye-Off Icon (Hide) -->
+                                <svg
+                                    class="eye-off-icon"
+                                    width="18"
+                                    height="18"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    stroke-width="2"
+                                    style="display: none;"
+                                >
+                                    <path
+                                        d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"
+                                    ></path>
+                                    <line
+                                        x1="1"
+                                        y1="1"
+                                        x2="23"
+                                        y2="23"
+                                    ></line>
+                                </svg>
+                            </button>
                         </div>
                         <small class="student-help-text">Your counselor will
                             provide you with this token</small>
@@ -98,6 +147,38 @@
                         Access Portal
                     </button>
                 </form>
+
+                <!-- Lost Token Help -->
+                <div class="student-help-box">
+                    <svg
+                        width="16"
+                        height="16"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                    >
+                        <circle
+                            cx="12"
+                            cy="12"
+                            r="10"
+                        ></circle>
+                        <line
+                            x1="12"
+                            y1="16"
+                            x2="12"
+                            y2="12"
+                        ></line>
+                        <line
+                            x1="12"
+                            y1="8"
+                            x2="12.01"
+                            y2="8"
+                        ></line>
+                    </svg>
+                    <p>Lost your token or it has expired? Please contact your
+                        counselor to request a new one.</p>
+                </div>
             </div>
 
             <!-- Footer -->
@@ -106,6 +187,33 @@
             </div>
         </div>
     </div>
+
+    <!-- JavaScript for Token Toggle -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const toggleBtn = document.getElementById('toggleToken');
+            const tokenInput = document.getElementById('token');
+            const eyeIcon = toggleBtn.querySelector('.eye-icon');
+            const eyeOffIcon = toggleBtn.querySelector('.eye-off-icon');
+
+            if (toggleBtn && tokenInput) {
+                toggleBtn.addEventListener('click', function () {
+                    // Toggle token visibility
+                    const isPassword = tokenInput.type === 'password';
+                    tokenInput.type = isPassword ? 'text' : 'password';
+
+                    // Toggle icons
+                    eyeIcon.style.display = isPassword ? 'none' : 'block';
+                    eyeOffIcon.style.display = isPassword ? 'block' : 'none';
+
+                    // Update aria-label
+                    toggleBtn.setAttribute('aria-label',
+                        isPassword ? 'Hide token' : 'Show token'
+                    );
+                });
+            }
+        });
+    </script>
 </body>
 
 </html>

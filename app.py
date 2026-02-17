@@ -3,6 +3,7 @@ from flask import Flask
 import os
 from dotenv import load_dotenv
 from User.routes import routes
+from flask_mail import Mail
 
 load_dotenv()
 
@@ -18,6 +19,22 @@ if not secret_key:
 app.secret_key = secret_key
 
 # --------------------------------------------------
+# Mail Setup (for counselor–student communication)
+# --------------------------------------------------
+app.config['MAIL_SERVER'] = os.getenv("MAIL_SERVER", "smtp.gmail.com")
+app.config['MAIL_PORT'] = int(os.getenv("MAIL_PORT", 587))
+app.config['MAIL_USE_TLS'] = os.getenv("MAIL_USE_TLS", "true").lower() == "true"
+app.config['MAIL_USE_SSL'] = False
+app.config['MAIL_USERNAME'] = os.getenv("MAIL_USERNAME")
+app.config['MAIL_PASSWORD'] = os.getenv("MAIL_PASSWORD")
+app.config['MAIL_DEFAULT_SENDER'] = os.getenv("MAIL_USERNAME")
+app.config['MAIL_MAX_EMAILS'] = None
+app.config['MAIL_ASCII_ATTACHMENTS'] = False
+
+# Initialize Flask-Mail
+mail = Mail(app)
+
+# --------------------------------------------------
 # Register Blueprints
 # --------------------------------------------------
 app.register_blueprint(routes)
@@ -25,8 +42,7 @@ app.register_blueprint(routes)
 
 @app.after_request
 def add_no_cache_headers(response):
-    response.headers["Cache-Control"] = "no-store, no-cache,"
-    "must-revalidate, private"
+    response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, private"
     response.headers["Pragma"] = "no-cache"
     response.headers["Expires"] = "0"
     return response

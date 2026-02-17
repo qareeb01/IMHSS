@@ -7,7 +7,7 @@
         name="viewport"
         content="width=device-width, initial-scale=1.0"
     >
-    <title>Counselor Login - IMHSS</title>
+    <title>Counselor Login - IMHMS</title>
     <link
         rel="stylesheet"
         href="/static/css/style.css"
@@ -44,8 +44,8 @@
                         ></path>
                     </svg>
                 </div>
-                <h1 class="staff-login-title">IMHSS</h1>
-                <p class="staff-login-subtitle">Student Mental Health Support
+                <h1 class="staff-login-title">IMHMS</h1>
+                <p class="staff-login-subtitle">Student Mental Health Monitoring System
                 </p>
             </div>
 
@@ -92,7 +92,7 @@
                         </div>
                     </div>
 
-                    <!-- Password Field -->
+                    <!-- Password Field with Toggle -->
                     <div class="staff-form-group">
                         <label
                             for="InputPassword1"
@@ -123,16 +123,64 @@
                                 id="InputPassword1"
                                 name="password"
                                 placeholder="••••••••"
-                                class="staff-input"
+                                class="staff-input staff-password-input"
                                 required
                             >
+                            <!-- Show/Hide Password Toggle -->
+                            <button
+                                type="button"
+                                class="password-toggle"
+                                id="togglePassword"
+                                aria-label="Toggle password visibility"
+                            >
+                                <!-- Eye Icon (Show) -->
+                                <svg
+                                    class="eye-icon"
+                                    width="20"
+                                    height="20"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    stroke-width="2"
+                                >
+                                    <path
+                                        d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"
+                                    ></path>
+                                    <circle
+                                        cx="12"
+                                        cy="12"
+                                        r="3"
+                                    ></circle>
+                                </svg>
+                                <!-- Eye-Off Icon (Hide) -->
+                                <svg
+                                    class="eye-off-icon"
+                                    width="20"
+                                    height="20"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    stroke-width="2"
+                                    style="display: none;"
+                                >
+                                    <path
+                                        d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"
+                                    ></path>
+                                    <line
+                                        x1="1"
+                                        y1="1"
+                                        x2="23"
+                                        y2="23"
+                                    ></line>
+                                </svg>
+                            </button>
                         </div>
                     </div>
 
                     <!-- Forgot Password Link -->
                     <div class="staff-forgot-password">
                         <a
-                            href="#"
+                            href="{{ url_for('IMHSS.forgot_password') }}"
                             class="forgot-link"
                         >Forgot password?</a>
                     </div>
@@ -161,6 +209,33 @@
             </div>
         </div>
     </div>
+
+    <!-- JavaScript for Password Toggle -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const toggleBtn = document.getElementById('togglePassword');
+            const passwordInput = document.getElementById('InputPassword1');
+            const eyeIcon = toggleBtn.querySelector('.eye-icon');
+            const eyeOffIcon = toggleBtn.querySelector('.eye-off-icon');
+
+            if (toggleBtn && passwordInput) {
+                toggleBtn.addEventListener('click', function () {
+                    // Toggle password visibility
+                    const isPassword = passwordInput.type === 'password';
+                    passwordInput.type = isPassword ? 'text' : 'password';
+
+                    // Toggle icons
+                    eyeIcon.style.display = isPassword ? 'none' : 'block';
+                    eyeOffIcon.style.display = isPassword ? 'block' : 'none';
+
+                    // Update aria-label
+                    toggleBtn.setAttribute('aria-label',
+                        isPassword ? 'Hide password' : 'Show password'
+                    );
+                });
+            }
+        });
+    </script>
 </body>
 
 </html>

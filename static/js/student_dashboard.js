@@ -1,4 +1,4 @@
-// student_dashboard.js - Enhanced Student Dashboard with Chat Persistence
+// student_dashboard.js 
 
 // ========== GLOBAL STATE ==========
 let currentSessionId = generateSessionId();
@@ -6,13 +6,111 @@ let chatHistoryLoaded = false;
 
 // ========== NAVIGATION ==========
 document.addEventListener('DOMContentLoaded', function() {
+    initializeMobileMenu(); // Add mobile menu functionality
     setupNavigation();
     setupChatFunctionality();
     setupBreathingExercises();
     setupStretchingExercises();
     setupMoodTracker();
     loadChatHistory(); // Load previous chat messages
+    autoHideAlerts(); // Auto-hide flash messages
 });
+
+// ========== AUTO-HIDE ALERTS ==========
+function autoHideAlerts() {
+    setTimeout(() => {
+        const alerts = document.querySelectorAll('.alert');
+        alerts.forEach(alert => {
+            alert.style.animation = 'slideOutRight 0.5s forwards';
+            setTimeout(() => {
+                alert.remove();
+            }, 500);
+        });
+    }, 4000); // Hide after 4 seconds
+}
+
+// ========== MOBILE MENU FUNCTIONALITY ==========
+function initializeMobileMenu() {
+    // Create mobile menu toggle button if it doesn't exist
+    if (!document.querySelector('.mobile-menu-toggle')) {
+        const toggleBtn = document.createElement('button');
+        toggleBtn.className = 'mobile-menu-toggle';
+        toggleBtn.setAttribute('aria-label', 'Toggle menu');
+        toggleBtn.innerHTML = `
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="3" y1="12" x2="21" y2="12"></line>
+                <line x1="3" y1="6" x2="21" y2="6"></line>
+                <line x1="3" y1="18" x2="21" y2="18"></line>
+            </svg>
+        `;
+        document.body.appendChild(toggleBtn);
+        
+        toggleBtn.addEventListener('click', toggleMobileMenu);
+    }
+    
+    // Create overlay if it doesn't exist
+    if (!document.querySelector('.sidebar-overlay')) {
+        const overlay = document.createElement('div');
+        overlay.className = 'sidebar-overlay';
+        document.body.appendChild(overlay);
+        
+        overlay.addEventListener('click', closeMobileMenu);
+    }
+    
+    // Add close button to sidebar
+    const sidebar = document.querySelector('.student-sidebar');
+    if (sidebar && !sidebar.querySelector('.mobile-close-btn')) {
+        const closeBtn = document.createElement('button');
+        closeBtn.className = 'mobile-close-btn';
+        closeBtn.setAttribute('aria-label', 'Close menu');
+        closeBtn.innerHTML = `
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+        `;
+        sidebar.appendChild(closeBtn);
+        
+        closeBtn.addEventListener('click', closeMobileMenu);
+    }
+}
+
+function toggleMobileMenu() {
+    const sidebar = document.querySelector('.student-sidebar');
+    const overlay = document.querySelector('.sidebar-overlay');
+    
+    if (sidebar && overlay) {
+        const isActive = sidebar.classList.contains('active');
+        
+        if (isActive) {
+            closeMobileMenu();
+        } else {
+            openMobileMenu();
+        }
+    }
+}
+
+function openMobileMenu() {
+    const sidebar = document.querySelector('.student-sidebar');
+    const overlay = document.querySelector('.sidebar-overlay');
+    
+    if (sidebar && overlay) {
+        sidebar.classList.add('active');
+        overlay.classList.add('active');
+        document.body.style.overflow = 'hidden';
+    }
+}
+
+function closeMobileMenu() {
+    const sidebar = document.querySelector('.student-sidebar');
+    const overlay = document.querySelector('.sidebar-overlay');
+    
+    if (sidebar && overlay) {
+        sidebar.classList.remove('active');
+        overlay.classList.remove('active');
+        document.body.style.overflow = '';
+    }
+}
 
 function setupNavigation() {
     const navLinks = document.querySelectorAll('.sidebar-link');
@@ -40,6 +138,9 @@ function setupNavigation() {
                     loadChatHistory();
                 }
             }
+            
+            // Close mobile menu after navigation
+            closeMobileMenu();
         });
     });
 }

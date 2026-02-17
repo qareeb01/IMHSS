@@ -1,4 +1,4 @@
-/* student_dashboard.css - Enhanced Responsive Student Dashboard */
+/* student_dashboard.css */
 
 * {
     margin: 0;
@@ -773,4 +773,452 @@ body {
     font-size: 1.125rem;
     color: var(--text-dark);
     margin-bottom: var(--spacing-sm);
+}
+
+/* ========================================
+   MOBILE RESPONSIVE STYLES
+   ======================================== */
+
+/* Mobile Menu Toggle Button */
+.mobile-menu-toggle {
+    position: fixed;
+    top: 1rem;
+    left: 1rem;
+    z-index: 1001;
+    background: var(--primary-gradient-start);
+    color: white;
+    border: none;
+    border-radius: var(--radius-sm);
+    padding: 0.75rem;
+    cursor: pointer;
+    display: none;
+    box-shadow: var(--shadow-lg);
+    transition: all 0.3s;
+}
+
+.mobile-menu-toggle:hover {
+    background: var(--primary-gradient-end);
+    transform: scale(1.05);
+}
+
+.mobile-menu-toggle svg {
+    display: block;
+}
+
+/* Sidebar Overlay */
+.sidebar-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 999;
+    transition: opacity 0.3s;
+}
+
+.sidebar-overlay.active {
+    display: block;
+}
+
+/* Mobile Close Button */
+.mobile-close-btn {
+    display: none;
+    position: absolute;
+    top: 1.5rem;
+    right: 1rem;
+    background: rgba(255, 255, 255, 0.2);
+    border: none;
+    color: white;
+    padding: 0.5rem;
+    border-radius: 6px;
+    cursor: pointer;
+    z-index: 1001;
+    transition: all 0.3s;
+}
+
+.mobile-close-btn:hover {
+    background: rgba(255, 255, 255, 0.3);
+}
+
+/* Alert Notifications */
+.alert {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    max-width: 400px;
+    width: 90%;
+    padding: 1rem 1.25rem;
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-lg);
+    z-index: 2000;
+    animation: slideInRight 0.5s forwards, slideOutRight 0.5s 3.5s forwards;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.alert-success {
+    background: #d4edda;
+    color: #155724;
+    border-left: 4px solid #28a745;
+}
+
+.alert-error,
+.alert-danger {
+    background: #f8d7da;
+    color: #721c24;
+    border-left: 4px solid #dc3545;
+}
+
+.alert-warning {
+    background: #fff3cd;
+    color: #856404;
+    border-left: 4px solid #ffc107;
+}
+
+@keyframes slideInRight {
+    from {
+        right: -400px;
+        opacity: 0;
+    }
+    to {
+        right: 20px;
+        opacity: 1;
+    }
+}
+
+@keyframes slideOutRight {
+    from {
+        right: 20px;
+        opacity: 1;
+    }
+    to {
+        right: -400px;
+        opacity: 0;
+    }
+}
+
+/* ========================================
+   TABLET RESPONSIVE (768px and below)
+   ======================================== */
+@media (max-width: 768px) {
+    /* Show mobile menu toggle */
+    .mobile-menu-toggle {
+        display: block;
+    }
+
+    /* Hide sidebar by default on mobile */
+    .student-sidebar {
+        transform: translateX(-100%);
+        z-index: 1000;
+    }
+
+    /* Show sidebar when active */
+    .student-sidebar.active {
+        transform: translateX(0);
+    }
+
+    /* Show mobile close button */
+    .mobile-close-btn {
+        display: block;
+    }
+
+    /* Adjust main content */
+    .student-main-content {
+        margin-left: 0;
+        width: 100%;
+        padding: 5rem var(--spacing-lg) var(--spacing-lg);
+    }
+
+    /* Adjust section headers */
+    .section-header h1 {
+        font-size: 1.5rem;
+    }
+
+    .section-subtitle {
+        font-size: 0.875rem;
+    }
+
+    /* Chat container adjustments */
+    .chat-container {
+        height: calc(100vh - 8rem);
+    }
+
+    .chat-messages {
+        padding: var(--spacing-md);
+    }
+
+    .message {
+        max-width: 85%;
+    }
+
+    /* Breathing/Stretching cards */
+    .exercise-grid {
+        grid-template-columns: 1fr;
+    }
+
+    /* Mood tracker grid */
+    .mood-options {
+        grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+    }
+
+    /* Tips grid */
+    .tips-grid {
+        grid-template-columns: 1fr;
+    }
+
+    /* Alert notifications */
+    .alert {
+        max-width: calc(100% - 2rem);
+        right: 1rem;
+    }
+
+    @keyframes slideInRight {
+        from {
+            right: -100%;
+            opacity: 0;
+        }
+        to {
+            right: 1rem;
+            opacity: 1;
+        }
+    }
+
+    /* Chat input adjustments */
+    .chat-input-container {
+        padding: var(--spacing-md);
+    }
+
+    .chat-input {
+        font-size: 16px; /* Prevents zoom on iOS */
+    }
+
+    .send-btn {
+        padding: 0.75rem 1.25rem;
+    }
+}
+
+/* ========================================
+   MOBILE RESPONSIVE (480px and below)
+   ======================================== */
+@media (max-width: 480px) {
+    /* Main content padding */
+    .student-main-content {
+        padding: 5rem var(--spacing-sm) var(--spacing-sm);
+    }
+
+    /* Section header */
+    .section-header {
+        margin-bottom: var(--spacing-md);
+    }
+
+    .section-header h1 {
+        font-size: 1.25rem;
+    }
+
+    .section-subtitle {
+        font-size: 0.813rem;
+    }
+
+    /* Sidebar adjustments */
+    .sidebar-header {
+        padding: var(--spacing-lg) var(--spacing-md);
+    }
+
+    .logo-icon {
+        width: 50px;
+        height: 50px;
+    }
+
+    .sidebar-title {
+        font-size: 1.25rem;
+    }
+
+    .sidebar-link {
+        padding: 0.75rem var(--spacing-md);
+        font-size: 0.875rem;
+    }
+
+    /* Chat container */
+    .chat-container {
+        height: calc(100vh - 6rem);
+        border-radius: var(--radius-md);
+    }
+
+    .chat-messages {
+        padding: var(--spacing-sm);
+    }
+
+    .message {
+        max-width: 90%;
+    }
+
+    .message-content {
+        padding: 0.625rem 0.875rem;
+        font-size: 0.875rem;
+    }
+
+    .message-time {
+        font-size: 0.625rem;
+    }
+
+    /* Chat input */
+    .chat-input-container {
+        padding: var(--spacing-sm);
+        flex-direction: column;
+        gap: var(--spacing-sm);
+    }
+
+    .chat-input {
+        padding: 0.75rem;
+        font-size: 16px;
+    }
+
+    .send-btn {
+        width: 100%;
+        justify-content: center;
+    }
+
+    /* Exercise cards */
+    .exercise-card {
+        padding: var(--spacing-md);
+    }
+
+    .exercise-card h3 {
+        font-size: 1rem;
+    }
+
+    /* Modal adjustments */
+    .modal-content {
+        width: 95%;
+        max-width: 95%;
+        padding: var(--spacing-lg);
+    }
+
+    .modal-header h2 {
+        font-size: 1.25rem;
+    }
+
+    /* Breathing circle */
+    #breathing-circle {
+        width: 120px;
+        height: 120px;
+    }
+
+    /* Mood buttons */
+    .mood-btn {
+        padding: var(--spacing-sm);
+    }
+
+    .mood-btn svg {
+        width: 28px;
+        height: 28px;
+    }
+
+    .mood-btn span {
+        font-size: 0.75rem;
+    }
+
+    /* Tip cards */
+    .tip-card {
+        padding: var(--spacing-md);
+    }
+
+    .tip-icon {
+        font-size: 2rem;
+    }
+
+    .tip-card h3 {
+        font-size: 1rem;
+    }
+
+    /* Sidebar footer */
+    .sidebar-footer {
+        padding: var(--spacing-md);
+    }
+
+    .user-profile {
+        flex-direction: column;
+        text-align: center;
+    }
+
+    .logout-btn {
+        width: 100%;
+    }
+}
+
+/* ========================================
+   EXTRA SMALL DEVICES (360px and below)
+   ======================================== */
+@media (max-width: 360px) {
+    .student-main-content {
+        padding: 4.5rem 0.5rem 0.5rem;
+    }
+
+    .section-header h1 {
+        font-size: 1.125rem;
+    }
+
+    .message {
+        max-width: 95%;
+    }
+
+    .chat-container {
+        border-radius: var(--radius-sm);
+    }
+
+    .mood-options {
+        gap: var(--spacing-sm);
+    }
+
+    .exercise-grid {
+        gap: var(--spacing-sm);
+    }
+}
+
+/* ========================================
+   LANDSCAPE ORIENTATION ON MOBILE
+   ======================================== */
+@media (max-width: 768px) and (orientation: landscape) {
+    .chat-container {
+        height: calc(100vh - 4rem);
+    }
+
+    .student-main-content {
+        padding: 3rem var(--spacing-md) var(--spacing-md);
+    }
+
+    .modal-content {
+        max-height: 85vh;
+        overflow-y: auto;
+    }
+}
+
+/* ========================================
+   HIGH DPI DISPLAYS
+   ======================================== */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+    .chat-container,
+    .exercise-card,
+    .tip-card {
+        border: 0.5px solid rgba(0, 0, 0, 0.05);
+    }
+}
+
+/* ========================================
+   PRINT STYLES (OPTIONAL)
+   ======================================== */
+@media print {
+    .student-sidebar,
+    .mobile-menu-toggle,
+    .sidebar-overlay {
+        display: none;
+    }
+
+    .student-main-content {
+        margin-left: 0;
+        width: 100%;
+    }
 }
