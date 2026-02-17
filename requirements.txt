@@ -41,3 +41,4 @@ typing_extensions==4.15.0
 Werkzeug==3.1.4
 wrapt==2.0.1
 WTForms==3.2.1
+gunicorn==23.0.0
