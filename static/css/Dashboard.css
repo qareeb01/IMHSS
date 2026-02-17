@@ -322,7 +322,7 @@ body {
 }
 
 #enable-notifications-btn {
-    display: none;
+    display: flex;
     align-items: center;
     gap: 0.5rem;
     padding: 0.75rem 1rem;

@@ -596,17 +596,30 @@ def counselor_view_student_messages(student_id):
         m['_id']: m for m in messages.find({'_id': {'$in': message_ids}})
     }
 
+    # Build enriched message objects for the template
+    enriched_messages = []
     for flag in student_flags:
-        flag['message'] = message_map.get(flag['message_id'])
+        msg = message_map.get(flag['message_id'])
+        if msg:
+            enriched_messages.append({
+                'content': msg.get('content', 'Message unavailable'),
+                'ai_response': msg.get('ai_response', 'Response unavailable'),
+                'timestamp': msg.get('timestamp') or flag.get('flagged_at'),
+                'flagged': True,  # All these are flagged messages
+                'risk_level': flag.get('risk_level', 'high')
+            })
 
     total_flags = flags.count_documents({
         'student_id': student_id,
         'counselor_id': counselor_id
     })
 
+    flagged_count = len(enriched_messages)
+
     return render_template('counselor_student_messages.html',
                            student=student,
-                           flags=student_flags,
+                           messages=enriched_messages,
+                           flagged_count=flagged_count,
                            page=page,
                            total_pages=(total_flags + per_page - 1)
                            // per_page)

@@ -208,7 +208,7 @@ if (window.location.pathname.includes('counselor/dashboard')) {
     // Check for new notifications every 30 seconds
     setInterval(async function() {
         await checkForNewNotifications();
-    }, 30000);
+    }, 10000);
     
     // Initial check on page load
     setTimeout(checkForNewNotifications, 2000);
