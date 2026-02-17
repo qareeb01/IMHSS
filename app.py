@@ -49,4 +49,6 @@ def add_no_cache_headers(response):
 
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    # debug=True is for local development ONLY.
+    debug_mode = os.getenv("FLASK_DEBUG", "false").lower() == "true"
+    app.run(debug=debug_mode)
