@@ -158,6 +158,56 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
+    // ========== MATRIC NUMBER VALIDATION & AUTO-FORMAT ==========
+    // Format: YY/NNNN  e.g. 22/0333
+    const matricField = document.getElementById('student_matricnumber');
+
+    if (matricField) {
+        // Auto-insert the slash after 2 digits as the user types
+        matricField.addEventListener('input', function () {
+            let raw = this.value.replace(/[^0-9/]/g, ''); // allow digits and /
+
+            // Auto-insert slash after first 2 digits
+            if (raw.length === 2 && !raw.includes('/')) {
+                raw = raw + '/';
+            }
+
+            // Prevent more than one slash
+            const parts = raw.split('/');
+            if (parts.length > 2) {
+                raw = parts[0] + '/' + parts.slice(1).join('');
+            }
+
+            // Limit: 2 digits + slash + up to 6 digits = 9 chars max
+            if (raw.length > 9) {
+                raw = raw.slice(0, 9);
+            }
+
+            this.value = raw;
+
+            // Live validity feedback
+            const matricPattern = /^[0-9]{2}\/[0-9]{2,6}$/;
+            if (matricPattern.test(this.value)) {
+                this.classList.add('valid');
+                this.classList.remove('invalid');
+            } else {
+                this.classList.remove('valid');
+            }
+        });
+
+        // Full validation on blur
+        matricField.addEventListener('blur', function () {
+            const matricPattern = /^[0-9]{2}\/[0-9]{2,6}$/;
+            if (this.value !== '' && !matricPattern.test(this.value)) {
+                this.classList.add('invalid');
+                this.classList.remove('valid');
+                this.setCustomValidity('Format must be YY/NNNN  (e.g. 22/0333)');
+            } else {
+                this.setCustomValidity('');
+            }
+        });
+    }
+
     // ========== PHONE NUMBER VALIDATION & FORMATTING ==========
     // Loop through each phone field found
     // Phone validation
