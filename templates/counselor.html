@@ -535,6 +535,7 @@
                     <h2>My Students</h2>
                     <p class="tab-subtitle">{{ my_students_count }} students
                         assigned</p>
+                    {% if my_students_count|default(0) < 5 %}
                     <a
                         href="{{ url_for('IMHSS.counselor_create_student') }}"
                         class="register-btn"
@@ -562,6 +563,7 @@
                         </svg>
                         Register New Student
                     </a>
+                    {% endif %}
                 </div>
             
                 {% if my_students %}
