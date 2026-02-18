@@ -525,8 +525,8 @@
             </section>
 
             <!-- ============================================================
-                 STUDENTS TAB
-                 ============================================================ -->
+                        STUDENTS TAB
+                        ============================================================ -->
             <div
                 id="students-tab"
                 class="tab-content"
@@ -563,7 +563,7 @@
                         Register New Student
                     </a>
                 </div>
-
+            
                 {% if my_students %}
                 <div class="students-grid">
                     {% for student in my_students %}
@@ -579,7 +579,7 @@
                                 <p class="student-dept">{{ student.department }}
                                 </p>
                             </div>
-
+            
                             {% if student.token_expired %}
                             <span class="token-badge expired">
                                 <svg
@@ -648,7 +648,7 @@
                                 </span>
                                 {% endif %}
                         </div>
-
+            
                         <div class="student-card-body">
                             <div class="student-detail">
                                 <span class="detail-label">Email:</span>
@@ -656,20 +656,43 @@
                                     }}</span>
                             </div>
                             <div class="student-detail">
-                                <span class="detail-label">Access Token:</span>
+                                <span class="detail-label">Hall:</span>
+                                <span class="detail-value">{{
+                                    student.hostel_hall }} -
+                                    Room {{ student.room_number
+                                    }}</span>
+                            </div>
+                            <div class="student-detail">
+                                <span class="detail-label">
+                                    Gender:</span>
+                                <span class="detail-value">{{
+                                    student.gender
+                                    }}</span>
+                            </div>
+                            <div class="student-detail">
+                                <span class="detail-label">Guardian
+                                    Contact:</span>
+                                <span class="detail-value">{{
+                                    student.parent_contact
+                                    }}</span>
+                            </div>
+                            <div class="student-detail">
+                                <span class="detail-label">Access
+                                    Token:</span>
                                 <span class="detail-value token-display">{{
                                     student.access_token }}</span>
                             </div>
                             {% if student.token_expires_at %}
                             <div class="student-detail">
-                                <span class="detail-label">Token Expires:</span>
+                                <span class="detail-label">Token
+                                    Expires:</span>
                                 <span class="detail-value">{{
                                     student.token_expires_at.strftime('%b %d, %Y
                                     %I:%M %p') }}</span>
                             </div>
                             {% endif %}
                         </div>
-
+            
                         <div class="student-card-actions">
                             <a
                                 href="{{ url_for('IMHSS.counselor_view_student_messages', student_id=student._id) }}"
@@ -701,7 +724,7 @@
                                 </svg>
                                 View Flagged Messages
                             </a>
-
+            
                             {% if student.token_expired or
                             student.days_until_expiry <=
                                 2

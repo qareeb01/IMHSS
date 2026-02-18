@@ -239,6 +239,13 @@ if (window.location.pathname.includes('counselor/dashboard')) {
             // Update badge count
             updateNotificationBadge(data.count);
             
+            // If user is on flagged tab and there are new notifications, refresh the page
+            const flaggedTab = document.getElementById('flagged-tab');
+            if (flaggedTab && flaggedTab.classList.contains('active') && 
+                data.count > lastNotificationCount && lastNotificationCount > 0) {
+                location.reload();
+            }
+            
             // Update last known count
             lastNotificationCount = data.count;
             

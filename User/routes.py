@@ -5,7 +5,7 @@ import os
 from flask import render_template, request, redirect, url_for, flash
 from flask import session, Blueprint, jsonify, current_app
 from werkzeug.security import check_password_hash, generate_password_hash
-from flask_mail import Message
+from flask_mail import Message, Mail
 from .models import User
 from .database import users, students, messages, flags, counselor_messages
 from .database import logs
@@ -416,7 +416,9 @@ def counselor_dashboard():
         {'counselor_id': counselor_id},
         {
             'name': 1, 'email': 1, 'matric': 1, 'department': 1,
-            'token_expires_at': 1, 'access_token': 1, 'token_used': 1
+            'token_expires_at': 1, 'access_token': 1, 'token_used': 1,
+            'parent_contact': 1, 'hostel_hall': 1, 'gender': 1,
+            'room_number': 1
         }
     ))
 
@@ -479,9 +481,13 @@ def counselor_dashboard():
         {'counselor_id': counselor_id}
     ).sort('sent_at', -1).limit(50))
 
+    # Check if counselor can register more students (max 5)
+    can_register_student = my_students_count < 5
+
     return render_template('counselor.html',
                            my_students_count=my_students_count,
                            my_students=my_students,
+                           can_register_student=can_register_student,
                            high_risk_flags=high_risk_flags,
                            medium_risk_flags=medium_risk_flags,
                            flagged_messages_count=(
