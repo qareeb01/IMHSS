@@ -31,8 +31,18 @@ app.config['MAIL_DEFAULT_SENDER'] = os.getenv("MAIL_USERNAME")
 app.config['MAIL_MAX_EMAILS'] = None
 app.config['MAIL_ASCII_ATTACHMENTS'] = False
 
-# Initialize Flask-Mail
+# Validate mail config
+if not app.config['MAIL_USERNAME']:
+    print("WARNING: MAIL_USERNAME not set - email features will not work")
+if not app.config['MAIL_PASSWORD']:
+    print("WARNING: MAIL_PASSWORD not set - email features will not work")
+
+# Initialize Flask-Mail (must be done before registering blueprints)
 mail = Mail(app)
+
+# Verify mail extension is accessible
+print(f"Flask-Mail initialized: {mail is not None}")
+print(f"Mail in app.extensions: {'mail' in app.extensions}")
 
 # --------------------------------------------------
 # Register Blueprints

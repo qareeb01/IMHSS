@@ -1,4 +1,4 @@
-# User/chat.py - Student Chat Handler
+# User/chat.py - Student Chat Handler with Clinical Risk Detection
 import re
 import uuid
 import datetime
@@ -9,274 +9,286 @@ import os
 
 
 # ============================================
-# RISK DETECTION ENGINE  (v2 — fuzzy + regex)
+# WEIGHTED RISK DETECTION ENGINE
+# Clinical-grade with context awareness
 # ============================================
 
 class RiskDetector:
     """
-    Regex-based risk detection.
+    Intelligent risk detection using weighted scoring.
 
-    Why regex instead of plain `keyword in text`:
-      - "kill my self"  → plain match misses the space;  \\s* catches it
-      - "self-harm"     → plain match misses the hyphen; normalise() strips it
-      - "hang mySelf"   → .lower() already handled this, but belt-and-braces
-      - "suicidal"      → \\w* suffix catches all inflections of "suicid"
-      - "wanna die"     → dedicated pattern covers common slang
-      - "kms" / "unalive" → modern abbreviations added explicitly
+    Scoring System:
+    - 0-3 points   = Low Risk (general distress)
+    - 4-7 points   = Medium Risk (serious concern)
+    - 8-11 points  = High Risk (urgent intervention)
+    - 12+ points   = Red Code (immediate crisis)
+    Each pattern has a weight based on clinical severity. Multiple patterns can accumulate to increase risk level, allowing for nuanced detection of complex messages. Context filters help reduce false positives on common phrases that may sound alarming but are not (e.g., "dying of laughter").
 
-    Each entry is (compiled_regex, canonical_label_for_dashboard).
-    Patterns run against the *normalised* text (see _normalise()).
+    Multiple keywords compound severity.
     """
 
-    # ── Normalisation ───────────────────────────────────────────
     @staticmethod
     def _normalise(text: str) -> str:
-        """
-        Lower-case and strip noise that causes keyword misses:
-          - hyphens / underscores / dots  →  space  (self-harm → self harm)
-          - smart/curly apostrophes       →  '
-          - non-alphanumeric except space →  removed
-          - multiple spaces               →  single space
-        """
+        """Normalize text for accurate pattern matching"""
         text = text.lower()
-        text = re.sub(r'[-_./\\]', ' ', text)          # punctuation → space
-        text = re.sub(r'[\u2018\u2019\u201c\u201d]', "'", text)  # curly quotes
-        text = re.sub(r"[^\w\s']", ' ', text)          # remove remaining punct
+        text = re.sub(r'[-_./\\]', ' ', text)
+        text = re.sub(r'[\u2018\u2019\u201c\u201d]', "'", text)
+        text = re.sub(r"[^\w\s']", ' ', text)
         text = re.sub(r'\s+', ' ', text).strip()
         return text
 
-    # ── HIGH RISK — immediate escalation ───────────────────────
-    _HIGH = [
-        # Self-directed harm — \w* after the verb stem catches all inflections:
-        # kill / kills / killing  |  hang / hangs / hanging  etc.
-        (re.compile(r'\bkill\w*\s*my\s*self\b'),        'kill myself'),
-        (re.compile(r'\bhurt\w*\s*my\s*self\b'),        'hurt myself'),
-        (re.compile(r'\bcut\w*\s*my\s*self\b'),         'cut myself'),
-        (re.compile(r'\bhang\w*\s*my\s*self\b'),        'hang myself'),
-        (re.compile(r'\bshoot\w*\s*my\s*self\b'),       'shoot myself'),
-        (re.compile(r'\bstab\w*\s*my\s*self\b'),        'stab myself'),
-        (re.compile(r'\bburn\w*\s*my\s*self\b'),        'burn myself'),
-        (re.compile(r'\bslash\s+my\s+wrists?\b'),       'slash my wrists'),
-        (re.compile(r'\bend\s+my\s+life\b'),            'end my life'),
-        (re.compile(r'\btake\s+my\s+(own\s+)?life\b'),  'take my life'),
-        (re.compile(r'\bend\s+it\s+all\b'),             'end it all'),
-
-        # Wanting to die / not exist
-        (re.compile(r'\bwant\s+to\s+die\b'),            'want to die'),
-        (re.compile(r'\bwanna\s+die\b'),                'wanna die'),
-        (re.compile(r'\bi\s+want\s+to\s+be\s+dead\b'), 'want to be dead'),
-        (re.compile(r'\bbetter\s+off\s+dead\b'),        'better off dead'),
-        (re.compile(r'\bno\s+reason\s+to\s+live\b'),    'no reason to live'),
-        (re.compile(r"\bdon'?t\s+want\s+to\s+(be\s+)?alive\b"),
-                                                        "don't want to be alive"),
-        (re.compile(r'\bnot\s+worth\s+being\s+alive\b'),'not worth being alive'),
-        (re.compile(r'\bwish\s+i\s+(was|were|am)\s+dead\b'), 'wish i was dead'),
-        (re.compile(r'\bwish\s+i\s+never\s+(existed|was\s+born)\b'),
-                                                        'wish i never existed'),
-
-        # Overdose
-        (re.compile(r'\bover\s*dos\w*\b'),              'overdose'),
-        (re.compile(r'\btake\s+too\s+many\s+(pills?|tablets?|meds?)\b'),
-                                                        'overdose on pills'),
-
-        # Jump / fall
-        (re.compile(r'\bjump\s+off\b'),                 'jump off'),
-        (re.compile(r'\bthrow\s+my\s*self\s+off\b'),   'throw myself off'),
-
-        # Suicide (all inflections)
-        (re.compile(r'\bsuicid\w*\b'),                  'suicide'),
-
-        # Modern slang / abbreviations
-        (re.compile(r'\bkms\b'),                        'kms'),       # kill myself
-        (re.compile(r'\bunalive\s*(my\s*self)?\b'),     'unalive'),   # TikTok euphemism
+    # ════════════════════════════════════════════════════════════════
+    # CRITICAL PATTERNS (Weight: 8 each - immediate high risk)
+    # ════════════════════════════════════════════════════════════════
+    _CRITICAL = [
+        # Suicidal ideation
+        (re.compile(r'\b(want to|wanna|going to|plan to|trying to)\s+die\b'), 'want to die', 8),
+        (re.compile(r'\b(kill|hurt|cut|hang|shoot|stab|burn)\w*\s+(my\s*)?self\b'), 'self-harm intent', 8),
+        (re.compile(r'\b(end|take)\s+my\s+(own\s+)?life\b'), 'end my life', 8),
+        (re.compile(r'\bsuicid(e|al|ing)\b'), 'suicide', 8),
+        (re.compile(r'\b(kms|unalive)\b'), 'kms/unalive', 8),
+        (re.compile(r'\bwish\s+i\s+(was|were)\s+dead\b'), 'wish i was dead', 8),
+        (re.compile(r'\bbetter\s+off\s+dead\b'), 'better off dead', 8),
+        
+        # Active self-harm
+        (re.compile(r'\bi\s+(cut|burned|hit)\s+(my\s*)?self\b'), 'i cut/burned myself', 8),
+        (re.compile(r'\bi\s+want\s+to\s+cut\b'), 'want to cut', 8),
+        (re.compile(r'\bburning\s+myself\s+helps\b'), 'burning myself', 8),
+        (re.compile(r'\bi\s+deserve\s+pain\b'), 'deserve pain', 8),
+        (re.compile(r'\bi\s+need\s+to\s+hurt\s+myself\b'), 'need to hurt myself', 8),
+        (re.compile(r'\b(like|love)\s+seeing\s+myself\s+bleed\b'), 'like seeing myself bleed', 8),
+        (re.compile(r'\bslash\w*\s+my\s+wrist\b'), 'slash my wrists', 8),
+        
+        # Psychosis
+        (re.compile(r'\bi\s+hear\s+voices\b'), 'hear voices', 8),
+        (re.compile(r'\bvoices?\s+(are\s+)?(telling|tell|told)\s+me\b'), 'voices telling me', 8),
+        (re.compile(r'\bsomeone\s+is\s+watching\s+me\b'), 'someone watching me', 8),
+        (re.compile(r'\b(they\'re|people\s+are)\s+following\s+me\b'), 'being followed', 8),
+        (re.compile(r'\bi\s+see\s+things\s+others\s+don\'?t\b'), 'seeing things', 8),
+        (re.compile(r'\b(tv|computer|phone)\s+is\s+sending\s+me\s+messages\b'), 'delusional thoughts', 8),
+        (re.compile(r'\bpeople\s+are\s+plotting\s+against\s+me\b'), 'paranoia', 8),
+        (re.compile(r'\bi\'?m\s+not\s+real\b'), 'i\'m not real', 8),
+        (re.compile(r'\bnothing\s+feels\s+real\b'), 'nothing feels real', 8),
+        
+        # Overdose/poisoning
+        (re.compile(r'\bover\s*dos(e|ed|ing)\b'), 'overdose', 8),
+        (re.compile(r'\b(take|took)\s+(too\s+many|all\s+my)\s+(pills?|tablets?|meds?)\b'), 'took too many pills', 8),
+        
+        # Ongoing abuse/danger
+        (re.compile(r'\bmy\s+(partner|boyfriend|girlfriend|husband|wife|dad|mom)\s+hits\s+me\b'), 'partner/parent hits me', 8),
+        (re.compile(r'\bi\'?m\s+scared\s+of\s+(him|her|them)\b'), 'scared of abuser', 8),
+        (re.compile(r'\bthey\s+threaten\s+me\b'), 'being threatened', 8),
+        (re.compile(r'\bi\'?m\s+not\s+allowed\s+to\s+leave\b'), 'not allowed to leave', 8),
+        (re.compile(r'\bi\'?m\s+trapped\b'), 'i\'m trapped', 8),
+        (re.compile(r'\bdon\'?t\s+feel\s+safe\s+at\s+home\b'), 'don\'t feel safe at home', 8),
     ]
 
-    # ── MEDIUM RISK — monitor closely ──────────────────────────
-    _MEDIUM = [
-        (re.compile(r'\bself\s*harm\w*\b'),             'self harm'),
-        (re.compile(r'\bhate\s*my\s*self\b'),           'hate myself'),
-        (re.compile(r'\bworthless\b'),                  'worthless'),
-        (re.compile(r'\bhopeless\b'),                   'hopeless'),
-        (re.compile(r"\bcan'?t\s+go\s+on\b"),          "can't go on"),
-        (re.compile(r"\bgiv(e|ing)\s+up\b"),            'give up'),
-        (re.compile(r'\bno\s+point\b'),                 'no point'),
-        (re.compile(r'\brather\s+be\s+dead\b'),         'rather be dead'),
-        (re.compile(r'\bdisappear\s+forever\b'),        'disappear forever'),
-        (re.compile(r'\bnot\s+worth\s+living\b'),       'not worth living'),
-        (re.compile(r'\bwish\s+i\s+wasn\'?t\s+here\b'), 'wish i wasn\'t here'),
-        (re.compile(r"\beveryone\s+(would\s+be|is)\s+better\s+off\s+without\s+me\b"),
-                'everyone better off without me'),
-        (re.compile(r'\bnobody\s+(would\s+)?care\s+if\s+i\b'), 'nobody cares if i'),
-        (re.compile(r'\bfeel\s+like\s+a\s+burden\b'),  'feel like a burden'),
-        (re.compile(r'\bcan\'t\s+take\s+it\s+anymore\b'), "can't take it anymore"),
-        (re.compile(r'\bno\s+way\s+out\b'),             'no way out'),
+    # ════════════════════════════════════════════════════════════════
+    # SEVERE PATTERNS (Weight: 5 each - serious concern)
+    # ════════════════════════════════════════════════════════════════
+    _SEVERE = [
+        # Severe hopelessness
+        (re.compile(r'\b(there\'?s\s+)?no\s+point\s+(in\s+)?(living|going\s+on)\b'), 'no point living', 5),
+        (re.compile(r'\bi\'?m\s+done\b'), 'i\'m done', 5),
+        (re.compile(r'\bi\s+give\s+up\b'), 'give up', 5),
+        (re.compile(r'\bnothing\s+matters\s+anymore\b'), 'nothing matters', 5),
+        (re.compile(r'\bdon\'?t\s+see\s+a\s+future\b'), 'don\'t see a future', 5),
+        (re.compile(r'\bdon\'?t\s+belong\s+anywhere\b'), 'don\'t belong', 5),
+        (re.compile(r'\beveryone\s+(would\s+be|is)\s+better\s+(off\s+)?without\s+me\b'), 'better without me', 5),
+        (re.compile(r'\bi\'?m\s+a\s+burden\b'), 'i\'m a burden', 5),
+        (re.compile(r'\bworthless\b'), 'worthless', 5),
+        (re.compile(r'\bhopeless\b'), 'hopeless', 5),
+        (re.compile(r'\bno\s+way\s+out\b'), 'no way out', 5),
+        (re.compile(r'\bcan\'?t\s+go\s+on\b'), 'can\'t go on', 5),
+        (re.compile(r'\bcan\'?t\s+take\s+it\s+anymore\b'), 'can\'t take it anymore', 5),
+        (re.compile(r'\bi\'?m\s+tired\s+of\s+everything\b'), 'tired of everything', 5),
+        
+        # Severe anxiety/panic
+        (re.compile(r'\bi\s+can\'?t\s+breathe\b'), 'can\'t breathe', 5),
+        (re.compile(r'\bmy\s+chest\s+is\s+tight\b'), 'chest is tight', 5),
+        (re.compile(r'\bi\s+feel\s+like\s+i\'?m\s+dying\b'), 'feel like dying', 5),
+        (re.compile(r'\b(my\s+)?heart\s+is\s+racing\b'), 'heart racing', 5),
+        (re.compile(r'\blos(e|ing)\s+control\b'), 'losing control', 5),
+        (re.compile(r'\b(i\'?m\s+)?(going|gone)\s+crazy\b'), 'going crazy', 5),
+        (re.compile(r'\bcan\'?t\s+calm\s+down\b'), 'can\'t calm down', 5),
+        (re.compile(r'\bterrified\s+for\s+no\s+reason\b'), 'terrified for no reason', 5),
+        (re.compile(r'\bpanic\s+attack\s+again\b'), 'panic attack again', 5),
+        
+        # PTSD/trauma
+        (re.compile(r'\bflashback\w*\b'), 'flashbacks', 5),
+        (re.compile(r'\bit\s+keeps\s+replaying\s+in\s+my\s+head\b'), 'replaying in my head', 5),
+        (re.compile(r'\bcan\'?t\s+sleep\s+because\s+of\s+what\s+happened\b'), 'can\'t sleep trauma', 5),
+        (re.compile(r'\bnightmares?\s+every\s+night\b'), 'nightmares every night', 5),
+        (re.compile(r'\bi\s+feel\s+unsafe\b'), 'feel unsafe', 5),
+        (re.compile(r'\bi\'?m\s+scared\s+all\s+the\s+time\b'), 'scared all the time', 5),
+        (re.compile(r'\bi\s+was\s+assault(ed)?\b'), 'was assaulted', 5),
+        (re.compile(r'\bi\s+was\s+abus(ed)?\b'), 'was abused', 5),
+        (re.compile(r'\bi\s+freeze\s+when\s+i\s+remember\b'), 'freeze when i remember', 5),
+        (re.compile(r'\bptsd\b'), 'PTSD', 5),
+        
+        # Eating disorders (severe)
+        (re.compile(r'\bhaven\'?t\s+eaten\s+in\s+days\b'), 'haven\'t eaten in days', 5),
+        (re.compile(r'\bi\s+threw\s+up\s+after\s+eating\b'), 'threw up after eating', 5),
+        (re.compile(r'\bi\s+feel\s+fat\s+and\s+disgusting\b'), 'feel fat and disgusting', 5),
+        (re.compile(r'\bstarv(e|ed|ing)\s+myself\b'), 'starving myself', 5),
+        (re.compile(r'\bi\s+need\s+to\s+purge\b'), 'need to purge', 5),
+        (re.compile(r'\bi\'?m\s+scared\s+of\s+food\b'), 'scared of food', 5),
+        (re.compile(r'\bi\s+binge\s+and\s+(then\s+)?vomit\b'), 'binge and vomit', 5),
+        (re.compile(r'\bi\s+only\s+ate\s+once\s+this\s+week\b'), 'ate once this week', 5),
+        
+        # Addiction/substance abuse
+        (re.compile(r'\bcan\'?t\s+stop\s+drinking\b'), 'can\'t stop drinking', 5),
+        (re.compile(r'\bi\s+drink\s+every\s+day\b'), 'drink every day', 5),
+        (re.compile(r'\bi\s+need\s+drugs\s+to\s+function\b'), 'need drugs to function', 5),
+        (re.compile(r'\bi\s+black\s+out\s+often\b'), 'black out often', 5),
+        (re.compile(r'\bi\s+use\s+to\s+forget\b'), 'use to forget', 5),
+        (re.compile(r'\bcan\'?t\s+go\s+a\s+day\s+without\s+it\b'), 'can\'t go a day without it', 5),
+        (re.compile(r'\bi\s+need\s+stronger\s+stuff\b'), 'need stronger stuff', 5),
+        (re.compile(r'\bi\s+take\s+more\s+than\s+prescribed\b'), 'take more than prescribed', 5),
+        
+        # Severe insomnia
+        (re.compile(r'\bhaven\'?t\s+slept\s+in\s+days\b'), 'haven\'t slept in days', 5),
+        (re.compile(r'\bi\'?m\s+afraid\s+to\s+sleep\b'), 'afraid to sleep', 5),
+        (re.compile(r'\bi\s+wake\s+up\s+screaming\b'), 'wake up screaming', 5),
+        (re.compile(r'\bi\s+see\s+things\s+at\s+night\b'), 'see things at night', 5),
+        (re.compile(r'\bi\'?m\s+scared\s+of\s+my\s+dreams\b'), 'scared of my dreams', 5),
+        (re.compile(r'\bcan\'?t\s+function\s+because\s+i\s+don\'?t\s+sleep\b'), 'can\'t function no sleep', 5),
+        
+        # Severe burnout
+        (re.compile(r'\bcan\'?t\s+function\s+anymore\b'), 'can\'t function anymore', 5),
+        (re.compile(r'\bi\s+just\s+stare\s+at\s+my\s+books\b'), 'just stare at books', 5),
+        (re.compile(r'\bmy\s+brain\s+feels\s+dead\b'), 'brain feels dead', 5),
+        (re.compile(r'\bcan\'?t\s+get\s+out\s+of\s+bed\b'), 'can\'t get out of bed', 5),
+        (re.compile(r'\bi\'?ve\s+failed\s+everything\b'), 'failed everything', 5),
+        (re.compile(r'\bi\s+feel\s+completely\s+empty\b'), 'feel completely empty', 5),
     ]
 
-    # ── LOW RISK — general distress ────────────────────────────
-    _LOW = [
-        (re.compile(r'\bdepress\w*\b'),                 'depressed'),
-        (re.compile(r'\banxi\w*\b'),                    'anxious'),
-        (re.compile(r'\bstress\w*\b'),                  'stressed'),
-        (re.compile(r'\boverwhelm\w*\b'),               'overwhelmed'),
-        (re.compile(r"\bcan'?t\s+sleep\b"),             "can't sleep"),
-        (re.compile(r'\binsomnia\b'),                   'insomnia'),
-        (re.compile(r'\blon\w*(ly|liness)\b'),          'lonely'),
-        (re.compile(r'\bsad(ness)?\b'),                 'sad'),
-        (re.compile(r'\bcry\w*\b'),                     'crying'),
-        (re.compile(r'\btired\s+of\s+life\b'),          'tired of life'),
-        (re.compile(r'\bburnout\b'),                    'burnout'),
-        (re.compile(r'\bpanic\w*\b'),                   'panic'),
-        (re.compile(r'\bbreakdown\b'),                  'breakdown'),
-        (re.compile(r'\bnumb\b'),                       'numb'),
-        (re.compile(r'\bexhaust\w*\b'),                 'exhausted'),
+    # ════════════════════════════════════════════════════════════════
+    # MODERATE PATTERNS (Weight: 3 each - moderate concern)
+    # ════════════════════════════════════════════════════════════════
+    _MODERATE = [
+        (re.compile(r'\bdepress(ed|ing|ion)\b'), 'depressed', 3),
+        (re.compile(r'\banxi(ous|ety)\b'), 'anxious', 3),
+        (re.compile(r'\bstress(ed|ful)\b'), 'stressed', 3),
+        (re.compile(r'\boverwhelm(ed|ing)\b'), 'overwhelmed', 3),
+        (re.compile(r'\bcan\'?t\s+sleep\b'), 'can\'t sleep', 3),
+        (re.compile(r'\binsomnia\b'), 'insomnia', 3),
+        (re.compile(r'\blon(e|ely|eliness)\b'), 'lonely', 3),
+        (re.compile(r'\bsad(ness)?\b'), 'sad', 3),
+        (re.compile(r'\bcry(ing)?\b'), 'crying', 3),
+        (re.compile(r'\btired\b'), 'tired', 3),
+        (re.compile(r'\bburnout\b'), 'burnout', 3),
+        (re.compile(r'\bexhaust(ed|ing)\b'), 'exhausted', 3),
+        (re.compile(r'\bnumb\b'), 'numb', 3),
+        (re.compile(r'\bbreak\s*up\b'), 'breakup', 3),
+        (re.compile(r'\bheart\s*broken\b'), 'heartbroken', 3),
+        (re.compile(r'\bbetra(y|yed|yal)\b'), 'betrayed', 3),
+        (re.compile(r'\brejected\b'), 'rejected', 3),
+        (re.compile(r'\bisolat(ed|ing|ion)\b'), 'isolated', 3),
+        (re.compile(r'\bexclud(ed|ing)\b'), 'excluded', 3),
+        (re.compile(r'\balone\b'), 'alone', 3),
+    ]
+
+    # ════════════════════════════════════════════════════════════════
+    # CONTEXT FILTERS - Reduce false positives
+    # ════════════════════════════════════════════════════════════════
+    _FALSE_POSITIVE_PATTERNS = [
+        re.compile(r'\bdying\s+(of\s+)?(laughter|laughing)\b'),  # "dying of laughter"
+        re.compile(r'\bkill(ing)?\s+(time|it|the\s+exam)\b'),    # "killing time"
+        re.compile(r'\bdead\s+tired\b'),                         # "dead tired"
+        re.compile(r'\bto\s+die\s+for\b'),                       # "to die for"
     ]
 
     @staticmethod
     def detect(message_text: str):
         """
-        Normalise then scan with regex patterns.
-
+        Weighted scoring with context awareness.
+        
         Returns:
-            tuple(risk_level: str, matched_keywords: list[str])
+            tuple(risk_level: str, matched_keywords: list, score: int)
         """
         normalised = RiskDetector._normalise(message_text)
+        
+        # Check for false positives first
+        for pattern in RiskDetector._FALSE_POSITIVE_PATTERNS:
+            if pattern.search(normalised):
+                return ("none", [], 0)
+        
+        score = 0
+        matched = []
 
-        # HIGH — stop at first tier with a match
-        matched = [
-            label for pattern, label in RiskDetector._HIGH
-            if pattern.search(normalised)
-        ]
-        if matched:
-            return ("high", matched)
+        # Score all matches
+        for pattern, label, weight in RiskDetector._CRITICAL:
+            if pattern.search(normalised):
+                score += weight
+                if label not in matched:
+                    matched.append(label)
 
-        matched = [
-            label for pattern, label in RiskDetector._MEDIUM
-            if pattern.search(normalised)
-        ]
-        if matched:
-            return ("medium", matched)
+        for pattern, label, weight in RiskDetector._SEVERE:
+            if pattern.search(normalised):
+                score += weight
+                if label not in matched:
+                    matched.append(label)
 
-        matched = [
-            label for pattern, label in RiskDetector._LOW
-            if pattern.search(normalised)
-        ]
-        if matched:
-            return ("low", matched)
+        for pattern, label, weight in RiskDetector._MODERATE:
+            if pattern.search(normalised):
+                score += weight
+                if label not in matched:
+                    matched.append(label)
 
-        return ("none", [])
+        # Determine risk level based on total score
+        if score >= 8:
+            return ("high", matched, score)
+        elif score >= 4:
+            return ("medium", matched, score)
+        elif score >= 3:
+            return ("low", matched, score)
+        else:
+            return ("none", [], 0)
 
 
 # ============================================
-# AI RESPONSE HANDLER  (v2 — Mira persona)
+# AI RESPONSE HANDLER
 # ============================================
 
 class AIResponder:
-    """
-    Generates warm, varied, exercise-aware AI responses via Claude.
+    """Warm, context-aware AI companion"""
 
-    Key changes from v1:
-    - Named persona (Mira) with defined personality
-    - Explicitly banned from repeating "I hear you"
-    - Carries a built-in library of 6 exercises to suggest naturally
-    - max_tokens raised to 500 (room for an exercise description)
-    - Responds *to the specific topic* the student raised, not generically
-    """
+    SYSTEM_PROMPT = """You are Mira, a warm and genuinely caring mental health companion for university students. You feel like a knowledgeable older student or a good friend who takes wellbeing seriously — not a clinical bot reading from a script.
 
-    SYSTEM_PROMPT = """You are Mira, a warm and genuinely caring mental health companion for university students. You feel like a knowledgeable older student or a good friend who takes wellbeing seriously  not a clinical bot reading from a script.
-
-PERSONALITY:
-- Engaged, warm, and real. You notice details in what the student says and respond to *them specifically*.
-- Lightly conversational in tone — natural, not stiff.
-- Genuinely encouraging without being fake or cheesy.
-- Curious — you want to understand what's really going on.
-
-VARY YOUR OPENING EVERY SINGLE RESPONSE. Rotate freely and never repeat the same opener in a conversation. Good openers include:
-- Reflecting the specific thing they mentioned: "Exam season hitting hard  that's genuinely exhausting."
-- Naming the emotion: "That kind of anxiety makes total sense given what you're dealing with."
-- A direct, warm follow-up: "Tell me more — what's been the hardest part?"
-- Gentle normalising: "A lot of students hit this exact wall around this time of year. You're not alone in it."
-- Acknowledging the effort of speaking up: "It takes courage to actually say that out loud."
-
-ABSOLUTELY BANNED — never use these phrases, not even once:
-- "I hear you"
-- "That sounds really heavy"
-- "I'm here to listen"
-- "You are not alone" (unless it's worked naturally into a specific sentence, not as a standalone)
-- Any robotic, scripted opener that doesn't respond to what they specifically said
-
-FOCUS ON WHAT THEY ACTUALLY SAID:
-- If they mention exams → talk about the pressure of exams specifically.
-- If they mention loneliness → talk about what it's like to feel disconnected on campus.
-- If they mention a breakup → acknowledge the grief of that specifically.
-- If they mention family pressure → reflect that back directly.
-- Never give a response that could apply to any topic. Every response should only fit THIS student's message.
-
-EXERCISES — suggest these naturally when the moment is right. Never force them. Describe them briefly and practically:
-
-1. 🌬️ BOX BREATHING: "Breathe in for 4 counts, hold for 4, out for 4, hold for 4. Repeat 3 times. It switches your nervous system from panic to calm in under 2 minutes."
-
-2. 🧠 5-4-3-2-1 GROUNDING: "Name 5 things you can see, 4 you can physically feel, 3 you can hear, 2 you can smell, 1 you can taste. It pulls your brain out of spiralling and into the present moment."
-
-3. 🚶 MOVEMENT RESET: "Even a 5-minute walk outside can shift your body's stress chemistry. You don't need a workout — just move long enough to change your environment."
-
-4. 📓 BRAIN DUMP + SORT: "Write everything that's weighing on you, then draw a line down the middle: left side is things you can act on, right side is things you can't control. This separates your real to-do list from unnecessary anxiety."
-
-5. 💧 PHYSICAL RESET: "Splash cold water on your face, drink a full glass of water slowly, or hold an ice cube briefly. A physical sensation can interrupt a mental spiral fast."
-
-6. 🌙 SLEEP/RACING MIND: "Before bed, write down everything you're worried about and physically close the notebook. Your brain keeps cycling through worries because it thinks it needs to hold them — writing them down tells it they're stored."
-
-7. You can also direct them to the "Exercises" tab in the app for more ideas, but try to suggest one naturally in the flow of conversation when it fits.
-
-RESPONSE LENGTH: 3-5 sentences. Enough to feel genuinely heard and to actually help  not so long it feels like a lecture or a list.
+YOUR VOICE:
+- Conversational, like texting a supportive friend
+- Empathetic without being overly formal
+- Practical — you give real suggestions, not just sympathy
+- Varied — never repeat the same phrases or structure across turns
 
 NEVER:
-- Mention counselors, monitoring systems, escalation, or that anyone else may see this chat.
-- Diagnose, prescribe, or claim clinical authority.
-- Be dismissive ("don't worry, it'll be fine").
-- Be fake-positive ("You've got this! 😊 Everything will work out!").
-- Redirect away from the conversation unless the student asks.
-- Repeat yourself across turns  vary your vocabulary, structure, and approach each time.
+- Mention counselors, monitoring systems, escalation, or that anyone else may see this chat
+- Diagnose, prescribe, or claim clinical authority
+- Be dismissive ("don't worry, it'll be fine")
+- Be fake-positive ("You've got this! 😊")
+- Repeat yourself across turns
 
-FOR CRISIS / SEVERE DISTRESS (suicidal thoughts, self-harm):
-- Do not panic or become clinical.
-- Acknowledge the pain directly, specifically, and without amplifying it.
-- Tell them you're genuinely glad they said it out loud.
-- Stay in the conversation  ask a grounding question to keep them present.
-- Suggest the box breathing or 5-4-3-2-1 grounding as something to try right now, together.
-- Make it clear this moment is not permanent and that pain this intense does shift.
-- Never mention emergency numbers, hotlines, or that you are alerting anyone.
+FOR CRISIS (suicidal thoughts, self-harm):
+- Acknowledge the pain directly
+- Tell them you're glad they said it out loud
+- Stay in the conversation
+- Suggest box breathing or 5-4-3-2-1 grounding
+- Never mention emergency numbers or hotlines
 
-You are here to make students feel genuinely understood and a little less alone  and to give them something real and practical to try."""
+RESPONSE LENGTH: 3-5 sentences."""
 
     @staticmethod
     def get_response(student_message: str, conversation_history=None) -> str:
-        """
-        Build context-aware message list and call Claude.
-
-        Args:
-            student_message:      Current message from the student.
-            conversation_history: List of recent message dicts from DB.
-
-        Returns:
-            AI response text (str).
-        """
         try:
             client = anthropic.Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
-
             api_messages = []
 
-            # Include last 6 turns for genuine conversational context
             if conversation_history:
                 for msg in conversation_history:
-                    api_messages.append({
-                        "role": "user",
-                        "content": msg["content"]
-                    })
+                    api_messages.append({"role": "user", "content": msg["content"]})
                     if msg.get("ai_response"):
-                        api_messages.append({
-                            "role": "assistant",
-                            "content": msg["ai_response"]
-                        })
+                        api_messages.append({"role": "assistant", "content": msg["ai_response"]})
 
             api_messages.append({"role": "user", "content": student_message})
 
@@ -291,17 +303,12 @@ You are here to make students feel genuinely understood and a little less alone 
 
         except Exception as e:
             print(f"AI API Error: {e}")
-            # Fallback  varied so it doesn't feel like the same canned message
-            fallbacks = [
-                "Something glitched on my end  but I'm still here. "
-                "What's been weighing on you most today?",
-                "Quick hiccup on my side, sorry about that. "
-                "Tell me what's going on — I want to hear it.",
-                "Ran into a technical snag, but don't let that stop you. "
-                "What did you want to share?"
-            ]
             import random
-            return random.choice(fallbacks)
+            return random.choice([
+                "Something glitched — but I'm still here. What's weighing on you?",
+                "Quick hiccup on my side. Tell me what's going on.",
+                "Technical snag, but don't stop. What did you want to share?"
+            ])
 
 
 # ============================================
@@ -309,22 +316,8 @@ You are here to make students feel genuinely understood and a little less alone 
 # ============================================
 
 def send_message():
-    """
-    POST /student/chat/send
-
-    Request JSON:
-        { "message": "...", "session_id": "<optional uuid>" }
-
-    Response JSON:
-        {
-            "success": true,
-            "ai_response": "...",
-            "message_id": "<uuid>",
-            "timestamp": "<ISO8601>"
-        }
-    """
-
-    # ──  Validate session ─────────────────────────────────────
+    """POST /student/chat/send"""
+    
     if "student_id" not in session:
         return jsonify({"error": "Unauthorized"}), 401
 
@@ -336,78 +329,75 @@ def send_message():
 
     counselor_id = student_record.get("counselor_id")
 
-    # ──  Parse request ────────────────────────────────────────
     data = request.get_json(silent=True)
-
     if not data or "message" not in data:
         return jsonify({"error": "Message required"}), 400
 
     student_message = data["message"].strip()
-
     if not student_message:
         return jsonify({"error": "Message cannot be empty"}), 400
-
     if len(student_message) > 2000:
-        return jsonify({"error": "Message too long (max 2000 chars)"}), 400
+        return jsonify({"error": "Message too long"}), 400
 
     session_id = data.get("session_id") or str(uuid.uuid4())
 
-    # ── 3. Risk detection (CRITICAL, do not skip) ──────────────
-    risk_level, matched_keywords = RiskDetector.detect(student_message)
+    # Weighted risk detection
+    risk_level, matched_keywords, risk_score = RiskDetector.detect(student_message)
     flagged = risk_level in ("high", "medium")
 
-    # ──  Recent conversation history (last 6 turns) ───────────
+    # Get conversation history
     conversation_history = list(
         messages.find(
             {"student_id": student_id, "session_id": session_id}
         ).sort("timestamp", -1).limit(6)
     )
-    conversation_history.reverse()          # chronological order for the API
+    conversation_history.reverse()
 
-    # ──  Get AI response ──────────────────────────────────────
+    # Get AI response
     ai_response = AIResponder.get_response(student_message, conversation_history)
 
-    # ──  Persist message ──────────────────────────────────────
+    # Save message
     message_id = str(uuid.uuid4())
-    timestamp  = datetime.datetime.utcnow()
+    timestamp = datetime.datetime.utcnow()
 
     message_doc = {
-        "_id":          message_id,
-        "student_id":   student_id,
+        "_id": message_id,
+        "student_id": student_id,
         "counselor_id": counselor_id,
-        "session_id":   session_id,
-        "content":      student_message,
-        "ai_response":  ai_response,
-        "risk_level":   risk_level,
-        "flagged":      flagged,
-        "timestamp":    timestamp,
+        "session_id": session_id,
+        "content": student_message,
+        "ai_response": ai_response,
+        "risk_level": risk_level,
+        "risk_score": risk_score,
+        "flagged": flagged,
+        "timestamp": timestamp,
     }
     messages.insert_one(message_doc)
 
-    # ──  Create risk flag if needed ───────────────────────────
+    # Create flag if needed
     if flagged:
         flag_doc = {
-            "_id":               str(uuid.uuid4()),
-            "message_id":        message_id,
-            "student_id":        student_id,
-            "counselor_id":      counselor_id,
-            "risk_level":        risk_level,
+            "_id": str(uuid.uuid4()),
+            "message_id": message_id,
+            "student_id": student_id,
+            "counselor_id": counselor_id,
+            "risk_level": risk_level,
+            "risk_score": risk_score,
             "detected_keywords": matched_keywords,
-            "flagged_at":        timestamp,
-            "reviewed":          False,
-            "reviewed_at":       None,
-            "reviewed_by":       None,
-            "notes":             None,
+            "flagged_at": timestamp,
+            "reviewed": False,
+            "reviewed_at": None,
+            "reviewed_by": None,
+            "notes": None,
         }
         flags.insert_one(flag_doc)
 
-        print(f"[{risk_level.upper()} RISK FLAG] "
-              f"student={student_id}  keywords={matched_keywords}")
+        print(f"[{risk_level.upper()} - Score: {risk_score}] "
+              f"student={student_id} keywords={matched_keywords}")
 
-    # ── Return response, never mention the flag ─────────────
     return jsonify({
-        "success":    True,
+        "success": True,
         "ai_response": ai_response,
         "message_id": message_id,
-        "timestamp":  timestamp.isoformat(),
+        "timestamp": timestamp.isoformat(),
     }), 200

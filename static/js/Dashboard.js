@@ -435,12 +435,9 @@ if (window.location.pathname.includes('counselor/dashboard')) {
 // GLOBAL HELPER FUNCTIONS
 // ========================================
 function viewFlaggedMessages() {
-    const flaggedTab = document.querySelector('[data-tab="flagged"]');
-    if (flaggedTab) {
-        flaggedTab.click();
-        // Scroll to top
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
+    // Reload page to fetch latest flags, then navigate to flagged tab
+    window.location.href = window.location.pathname + '#flagged';
+    window.location.reload();
 }
 
 // ========================================

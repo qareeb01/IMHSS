@@ -17,6 +17,18 @@ routes = Blueprint('IMHSS', __name__, template_folder='templates',
                    static_folder='static')
 
 
+# ══════════════════════════════════════════════════════════════
+# TIMEZONE CONVERSION FILTER
+# Nigeria WAT = UTC+1
+# ══════════════════════════════════════════════════════════════
+@routes.app_template_filter('local_time')
+def local_time_filter(utc_dt):
+    """Convert UTC datetime to Nigeria WAT (UTC+1)"""
+    if not utc_dt:
+        return None
+    return utc_dt + datetime.timedelta(hours=1)
+
+
 # --------------------------------------------------
 # Landing Page
 # --------------------------------------------------
@@ -415,7 +427,7 @@ def counselor_dashboard():
     my_students = list(students.find(
         {'counselor_id': counselor_id},
         {
-            'name': 1, 'email': 1, 'matric': 1, 'department': 1,
+            'name': 1, 'email': 1, 'phone': 1, 'matric': 1, 'department': 1,
             'token_expires_at': 1, 'access_token': 1, 'token_used': 1,
             'parent_contact': 1, 'hostel_hall': 1, 'gender': 1,
             'room_number': 1
@@ -440,17 +452,24 @@ def counselor_dashboard():
     total_messages_count = messages.count_documents(
         {'student_id': {'$in': student_ids}})
 
+    # Show ONLY unreviewed flags (reviewed ones are cleared)
     high_risk_flags = list(flags.find({
         'counselor_id': counselor_id,
-        'reviewed': False,
-        'risk_level': 'high'
+        'risk_level': 'high',
+        'reviewed': False
     }).sort('flagged_at', -1).limit(20))
 
     medium_risk_flags = list(flags.find({
         'counselor_id': counselor_id,
-        'reviewed': False,
-        'risk_level': 'medium'
+        'risk_level': 'medium',
+        'reviewed': False
     }).sort('flagged_at', -1).limit(20))
+
+    # Count only UNREVIEWED flags for stat card
+    unreviewed_count = flags.count_documents({
+        'counselor_id': counselor_id,
+        'reviewed': False
+    })
 
     flag_student_ids = list(
         set([f['student_id'] for f in high_risk_flags + medium_risk_flags]))
@@ -484,15 +503,21 @@ def counselor_dashboard():
     # Check if counselor can register more students (max 5)
     can_register_student = my_students_count < 5
 
+    # Debug: Log flag counts
+    print(f'[DEBUG] Counselor {counselor_id} dashboard:')
+    print(f'  - high_risk_flags: {len(high_risk_flags)}')
+    print(f'  - medium_risk_flags: {len(medium_risk_flags)}')
+    print(f'  - unreviewed_count: {unreviewed_count}')
+    if high_risk_flags:
+        print(f'  - First high-risk flag: {high_risk_flags[0].get("student_id", "No ID")}')
+
     return render_template('counselor.html',
                            my_students_count=my_students_count,
                            my_students=my_students,
                            can_register_student=can_register_student,
                            high_risk_flags=high_risk_flags,
                            medium_risk_flags=medium_risk_flags,
-                           flagged_messages_count=(
-                               len(high_risk_flags) + len(medium_risk_flags)
-                           ),
+                           flagged_messages_count=unreviewed_count,
                            total_messages_count=total_messages_count,
                            messageable_students=messageable_students,
                            sent_messages=sent_messages)
@@ -730,12 +755,11 @@ def counselor_send_message():
 
         mail_username = os.getenv('MAIL_USERNAME')
         noreply_name = os.getenv('NOREPLY_NAME', 'IMHMS Support')
-        noreply_email = os.getenv('NOREPLY_EMAIL', mail_username)
 
         msg = Message(
             subject=subject,
             recipients=[student_email],
-            sender=(noreply_name, noreply_email)
+            sender=(noreply_name, mail_username)
         )
         msg.body = (
             f"Dear {student_name},\n\n"
@@ -987,8 +1011,8 @@ def check_notifications():
         'count': unreviewed_count,
         'flags': [{
             'student_name': flag['student_name'],
-            'risk_level':   flag.get('risk_level', 'high'),
-            'flagged_at':   flag['flagged_at'].isoformat(),
-            'keywords':     flag['detected_keywords']
+            'risk_level': flag.get('risk_level', 'high'),
+            'flagged_at': flag['flagged_at'].isoformat(),
+            'keywords': flag.get('detected_keywords', [])
         } for flag in latest_flags]
     })

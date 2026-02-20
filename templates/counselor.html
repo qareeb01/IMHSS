@@ -490,9 +490,9 @@
                 <!-- Recent Activity -->
                 <div class="recent-activity">
                     <h3>Recent High-Risk Alerts</h3>
-                    {% if high_risk_flags %}
+                    {% if high_risk_flags or medium_risk_flags %}
                     <div class="activity-list">
-                        {% for flag in high_risk_flags[:5] %}
+                        {% for flag in (high_risk_flags + medium_risk_flags)[:5] %}
                         <div class="activity-item urgent">
                             <div class="activity-icon">⚠️</div>
                             <div class="activity-details">
@@ -504,8 +504,9 @@
                                 <p class="activity-keywords">Keywords: {{ ',
                                     '.join(flag.detected_keywords) }}</p>
                                 <p class="activity-time">{{
-                                    flag.flagged_at.strftime('%B %d, %Y at %I:%M
-                                    %p') if flag.flagged_at else 'Unknown time'
+                                    (flag.flagged_at|local_time).strftime('%B
+                                    %d, %Y at %I:%M %p') if flag.flagged_at else
+                                    'Unknown time'
                                     }}</p>
                             </div>
                             <a
@@ -658,6 +659,10 @@
                                     }}</span>
                             </div>
                             <div class="student-detail">
+                                <span class="detail-label">Phone:</span>
+                                <span class="detail-value">{{ student.phone or 'Not provided' }}</span>
+                            </div>
+                            <div class="student-detail">
                                 <span class="detail-label">Hall:</span>
                                 <span class="detail-value">{{
                                     student.hostel_hall }} -
@@ -793,8 +798,8 @@
             </div>
 
             <!-- ============================================================
-                 FLAGGED MESSAGES TAB
-                 ============================================================ -->
+                        FLAGGED MESSAGES TAB
+                        ============================================================ -->
             <section
                 id="flagged-tab"
                 class="tab-content"
@@ -804,12 +809,11 @@
                     <p class="content-subtitle">Review high-risk student
                         messages</p>
                 </div>
-
-                {% if high_risk_flags %}
+            
+                {% if high_risk_flags or medium_risk_flags %}
                 <div class="flagged-messages-list">
-                    {% for flag in high_risk_flags %}
-                    <div
-                        class="flag-card {% if not flag.reviewed %}urgent{% endif %}">
+                    {% for flag in high_risk_flags + medium_risk_flags %}
+                    <div class="flag-card {% if not flag.reviewed %}urgent{% endif %}">
                         <div class="flag-header">
                             <div class="flag-student">
                                 <div class="student-avatar-small">
@@ -820,7 +824,7 @@
                                     <h4>{{ flag.student.name if flag.student
                                         else 'Unknown Student' }}</h4>
                                     <p class="flag-time">{{
-                                        flag.flagged_at.strftime('%B %d, %Y at
+                                        (flag.flagged_at|local_time).strftime('%B %d, %Y at
                                         %I:%M %p') if flag.flagged_at else
                                         'Unknown time' }}</p>
                                 </div>
@@ -831,7 +835,7 @@
                             <span class="risk-badge reviewed">Reviewed</span>
                             {% endif %}
                         </div>
-
+            
                         <div class="flag-content">
                             <div class="flag-keywords">
                                 <strong>Detected Keywords:</strong>
@@ -852,7 +856,7 @@
                                     else 'Response unavailable' }}</p>
                             </div>
                         </div>
-
+            
                         {% if not flag.reviewed %}
                         <div class="flag-actions">
                             <form
@@ -874,8 +878,12 @@
                         </div>
                         {% else %}
                         <div class="flag-reviewed-info">
+                            <p class="flag-time">{{
+                                (flag.flagged_at|local_time).strftime('%B %d, %Y at %I:%M
+                                %p') if flag.flagged_at else
+                                'Unknown time' }}</p>
                             <p><strong>Reviewed by:</strong> You on {{
-                                flag.reviewed_at.strftime('%B %d, %Y at %I:%M
+                                (flag.reviewed_at|local_time).strftime('%B %d, %Y at %I:%M
                                 %p') if flag.reviewed_at else 'Unknown' }}</p>
                             {% if flag.notes %}
                             <p><strong>Notes:</strong> {{ flag.notes }}</p>
@@ -904,6 +912,8 @@
                 </div>
                 {% endif %}
             </section>
+
+
 
             <!-- ============================================================
                  MESSAGE STUDENT TAB

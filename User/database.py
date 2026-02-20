@@ -12,14 +12,18 @@ if not mongo_uri:
     raise RuntimeError("MONGODB_URI not set in environment variables")
 
 # Create MongoDB client with optimized settings
+# Increased timeouts to prevent background task errors on slow connections
 client = MongoClient(
     mongo_uri,
-    serverSelectionTimeoutMS=3000,
+    serverSelectionTimeoutMS=5000,      # 5 sec (was 3)
     maxPoolSize=50,
-    minPoolSize=10,
-    maxIdleTimeMS=45000,
-    connectTimeoutMS=10000,
-    socketTimeoutMS=20000
+    minPoolSize=5,                       # Reduced from 10 to reduce connection overhead
+    maxIdleTimeMS=60000,                 # 60 sec (was 45)
+    connectTimeoutMS=20000,              # 20 sec (was 10)
+    socketTimeoutMS=45000,               # 45 sec (was 20)
+    retryWrites=True,                    # Auto-retry failed writes
+    retryReads=True,                     # Auto-retry failed reads
+    w='majority'                         # Write concern for data safety
 )
 
 # Database instance
